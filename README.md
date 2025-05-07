@@ -31,11 +31,11 @@ func main() {
 	config := conf.NewConfig(&c)
 	err := config.ParseArgs("--help")
 	if err != nil {
-        panic(err)
-    }
+		panic(err)
+	}
 	if c.Help {
 		println(config.HelpFlags())
-        return
+		return
 	}
 }
 ```
@@ -59,11 +59,11 @@ func main() {
 	config := conf.NewConfig(&c)
 	err := config.ParseEnv("CFG_0=--help")
 	if err != nil {
-        panic(err)
-    }
+		panic(err)
+	}
 	if c.Help {
 		println(config.HelpFlags())
-        return
+		return
 	}
 }
 ```
@@ -86,20 +86,20 @@ func main() {
 	c := MyConfig{}
 
 	config := conf.NewConfig(&c)
-	
+
 	yamlFile, err := os.Open("/path/to/config.yaml")
 	if err != nil {
 		panic(err)
 	}
 	defer yamlFile.Close()
-	
+
 	err = config.ParseYaml(yamlFile)
 	if err != nil {
-        panic(err)
-    }
+		panic(err)
+	}
 	if c.Help {
 		println(config.HelpFlags())
-        return
+		return
 	}
 }
 ```
@@ -129,8 +129,8 @@ func main() {
 	config := conf.NewConfig(&c, conf.WithDefaults(Default))
 	err := config.ParseArgs()
 	if err != nil {
-        panic(err)
-    }
+		panic(err)
+	}
 	println(c.String) // should be "default"
 }
 ```
@@ -152,8 +152,8 @@ type MyConfig struct {
 
 func (c *MyConfig) GetUsage(field string) string {
 	if field == "String" {
-        return "Dynamic help for string"
-    }
+		return "Dynamic help for string"
+	}
 	return ""
 }
 
