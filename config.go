@@ -25,7 +25,8 @@ func NewConfig[T any](dest *T, opts ...Option) *Config {
 }
 
 func (c *Config) Parse(args []string) error {
-	reader := newReader(args, c.options)
+	properties := c.collectHelpProperties()
+	reader := newReader(args, &properties, c.options)
 	return yaml.NewDecoder(reader, c.options.decodeOptions...).Decode(c.dest)
 }
 

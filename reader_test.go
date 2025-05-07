@@ -76,7 +76,37 @@ func TestReader(t *testing.T) {
 "string": hello
 `
 
-	result, err := io.ReadAll(newReader(args, newDefaultOptions()))
+	result, err := io.ReadAll(newReader(args, nil, newDefaultOptions()))
+	assert.NoError(t, err)
+	assert.Equal(t, strings.TrimSpace(expected), strings.TrimSpace(string(result)))
+}
+
+func TestReader_Short(t *testing.T) {
+	testStruct := struct {
+		String string `yaml:"string" short:"s"`
+		Inner  struct {
+			Int  int  `yaml:"int" short:"i"`
+			Bool bool `yaml:"bool" short:"B"`
+		} `yaml:"inner"`
+		Bool bool `yaml:"bool" short:"b"`
+	}{}
+	args := []string{
+		"-s=string",
+		"-i=42",
+		"-b=true",
+		"-B",
+	}
+	props := NewConfig(&testStruct).collectHelpProperties()
+
+	expected := `
+"bool": true
+"inner":
+  "bool": true
+  "int": 42
+"string": string
+`
+
+	result, err := io.ReadAll(newReader(args, &props, newDefaultOptions()))
 	assert.NoError(t, err)
 	assert.Equal(t, strings.TrimSpace(expected), strings.TrimSpace(string(result)))
 }
@@ -153,7 +183,7 @@ func Test_collectLines(t *testing.T) {
 
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("%s_%d", t.Name(), i), func(t *testing.T) {
-			r := newReader(tt.given, newDefaultOptions())
+			r := newReader(tt.given, nil, newDefaultOptions())
 			assert.Equal(t, tt.expected, r.collectLines())
 		})
 	}

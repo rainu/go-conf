@@ -15,22 +15,29 @@ type Reader struct {
 
 	running bool
 
-	reKeyVal     *regexp.Regexp
-	reKeyValFlag *regexp.Regexp
+	reKeyVal          *regexp.Regexp
+	reKeyValFlag      *regexp.Regexp
+	reKeyValShort     *regexp.Regexp
+	reKeyValShortFlag *regexp.Regexp
 
-	options Options
-	args    []string
+	options    Options
+	properties *Properties
+	args       []string
 }
 
-func newReader(args []string, options Options) *Reader {
+func newReader(args []string, dst *Properties, options Options) *Reader {
 	r := &Reader{
-		args:    args,
-		options: options,
+		args:       args,
+		properties: dst,
+		options:    options,
 	}
 	r.r, r.w = io.Pipe()
 
 	r.reKeyVal = regexp.MustCompile(`^` + options.prefixLong + `([^` + string(options.assignSign) + `]*)` + string(options.assignSign) + `(.*)$`)
+	r.reKeyValShort = regexp.MustCompile(`^` + options.prefixShort + `([^` + string(options.assignSign) + `]*)` + string(options.assignSign) + `(.*)$`)
+
 	r.reKeyValFlag = regexp.MustCompile(`^` + options.prefixLong + `([^` + string(options.assignSign) + `]*)$`)
+	r.reKeyValShortFlag = regexp.MustCompile(`^` + options.prefixShort + `([^` + string(options.assignSign) + `]*)$`)
 
 	return r
 }
@@ -101,17 +108,14 @@ func (r *Reader) collectLines() []line {
 		key := r.args[i]
 		var value string
 
-		longResult := r.reKeyVal.FindAllStringSubmatch(key, -1)
-		flagResult := r.reKeyValFlag.FindAllStringSubmatch(key, -1)
-
-		if len(longResult) == 1 {
-			key = longResult[0][1]
-			value = longResult[0][2]
-		} else if len(flagResult) == 1 {
-			key = flagResult[0][1]
-			value = "true"
-		} else {
-			continue
+		if !r.tryShort(key, &key, &value) {
+			if !r.tryShortFlag(key, &key, &value) {
+				if !r.tryLong(key, &key, &value) {
+					if !r.tryLongFlag(key, &key, &value) {
+						continue
+					}
+				}
+			}
 		}
 
 		lines = append(lines, line{
@@ -126,6 +130,72 @@ func (r *Reader) collectLines() []line {
 	})
 
 	return lines
+}
+
+func (r *Reader) tryLong(line string, key, value *string) bool {
+	result := r.reKeyVal.FindAllStringSubmatch(line, -1)
+	if len(result) == 1 {
+		*key = result[0][1]
+		*value = result[0][2]
+		return true
+	}
+	return false
+}
+
+func (r *Reader) tryLongFlag(line string, key, value *string) bool {
+	result := r.reKeyValFlag.FindAllStringSubmatch(line, -1)
+	if len(result) == 1 {
+		*key = result[0][1]
+		*value = "true"
+		return true
+	}
+	return false
+}
+
+func (r *Reader) tryShort(line string, key, value *string) bool {
+	// for short variant we need the properties
+	if r.properties == nil {
+		return false
+	}
+
+	result := r.reKeyValShort.FindAllStringSubmatch(line, -1)
+	if len(result) == 1 {
+		k := result[0][1]
+
+		// search for property with given short key
+		corProperty := r.properties.findByShort(k)
+		if corProperty == nil {
+			return false
+		}
+
+		// convert to long-variant and delegate to the long-variant
+		line = r.options.prefixLong + corProperty.Path.key(r.options, "0") + string(r.options.assignSign) + result[0][2]
+		return r.tryLong(line, key, value)
+	}
+	return false
+}
+
+func (r *Reader) tryShortFlag(line string, key, value *string) bool {
+	// for short variant we need the properties
+	if r.properties == nil {
+		return false
+	}
+
+	result := r.reKeyValShortFlag.FindAllStringSubmatch(line, -1)
+	if len(result) == 1 {
+		k := result[0][1]
+
+		// search for property with given short key
+		corProperty := r.properties.findByShort(k)
+		if corProperty == nil {
+			return false
+		}
+
+		// convert to long-variant and delegate to the long-variant
+		line = r.options.prefixLong + corProperty.Path.key(r.options, "0")
+		return r.tryLongFlag(line, key, value)
+	}
+	return false
 }
 
 func (r *Reader) splitPreservingBrackets(s string) []string {

@@ -195,6 +195,15 @@ func (p Properties) Get() []Property {
 	return p.p
 }
 
+func (p Properties) findByShort(key string) *Property {
+	for _, property := range p.p {
+		if property.Short == key {
+			return &property
+		}
+	}
+	return nil
+}
+
 func (p Properties) HelpFlags() string {
 	var sb strings.Builder
 
@@ -244,7 +253,7 @@ func (p Properties) HelpYaml() string {
 		fakeArgs = append(fakeArgs, arg)
 	}
 
-	r := newReader(fakeArgs, p.options)
+	r := newReader(fakeArgs, nil, p.options)
 	defer r.Close()
 
 	c, _ := io.ReadAll(r)
