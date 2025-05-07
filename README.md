@@ -18,7 +18,7 @@ Therefore, you have to use the yaml-tags for defining the key names.
 package main
 
 import (
-	conf "github.com/rainu/go-conf"
+	"github.com/rainu/go-conf"
 )
 
 type MyConfig struct {
@@ -46,7 +46,7 @@ func main() {
 package main
 
 import (
-	conf "github.com/rainu/go-conf"
+	"github.com/rainu/go-conf"
 )
 
 type MyConfig struct {
@@ -74,7 +74,7 @@ func main() {
 package main
 
 import (
-	conf "github.com/rainu/go-conf"
+	"github.com/rainu/go-conf"
 	"os"
 )
 
@@ -112,7 +112,7 @@ For applying default values you have to define a function which will be called e
 package main
 
 import (
-	conf "github.com/rainu/go-conf"
+	"github.com/rainu/go-conf"
 )
 
 type MyConfig struct {
@@ -143,7 +143,7 @@ Sometimes you want to define a dynamic usage for a flag. Therefore, your struct 
 package main
 
 import (
-	conf "github.com/rainu/go-conf"
+	"github.com/rainu/go-conf"
 )
 
 type MyConfig struct {
@@ -171,7 +171,7 @@ func main() {
 package main
 
 import (
-	conf "github.com/rainu/go-conf"
+	"github.com/rainu/go-conf"
 )
 
 type MyConfig struct {
