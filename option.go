@@ -1,4 +1,4 @@
-package main
+package conf
 
 import (
 	"github.com/goccy/go-yaml"
