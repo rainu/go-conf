@@ -16,7 +16,9 @@ type Options struct {
 	usageTag string
 	shortTag string
 
-	defaultSetter map[reflect.Type]func(any)
+	defaultSetter     map[reflect.Type]func(any)
+	autoApplyDefaults bool
+
 	decodeOptions []yaml.DecodeOption
 }
 
@@ -30,6 +32,7 @@ func newDefaultOptions() Options {
 	WithPrefixEnv("CFG_")(&opts)
 	WithUsageTag("usage")(&opts)
 	WithShortTag("short")(&opts)
+	WithAutoApplyDefaults(true)(&opts)
 
 	return opts
 }
@@ -89,6 +92,13 @@ func WithShortTag(tag string) Option {
 func WithDecoderOptions(options ...yaml.DecodeOption) Option {
 	return func(o *Options) {
 		o.decodeOptions = append(o.decodeOptions, options...)
+	}
+}
+
+// WithAutoApplyDefaults define if the default values should be applied automatically before first parsing. Default is true.
+func WithAutoApplyDefaults(b bool) Option {
+	return func(o *Options) {
+		o.autoApplyDefaults = b
 	}
 }
 

@@ -116,6 +116,15 @@ func TestConfig_ParseEnv(t *testing.T) {
 	}, conf)
 }
 
+func TestConfig_Parse_Empty(t *testing.T) {
+	conf := testConfig{}
+
+	c := NewConfig(&conf)
+
+	assert.NoError(t, c.ParseArgs())
+	assert.NoError(t, c.ParseEnv())
+}
+
 func TestConfig_Parse_WithDefaults(t *testing.T) {
 	conf := testConfig{}
 
@@ -141,6 +150,9 @@ func TestConfig_Parse_WithDefaults(t *testing.T) {
 		CustomMap: map[string]testEntry{
 			"test1":  {Key: "name1", Value: "value1"},
 			"test 2": {Key: "name2", Value: "DEFAULT"},
+		},
+		Entry: testEntry{
+			Value: "DEFAULT", //should be applied by AutoApplyDefaults
 		},
 	}, conf)
 }
