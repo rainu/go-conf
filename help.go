@@ -219,18 +219,21 @@ func (p Properties) HelpFlags() string {
 			short = p.options.prefixShort + short
 			short += ", "
 		}
-		defValue := ""
-		if property.DefaultValue != nil {
-			defValue = fmt.Sprintf("(default: %v)", property.DefaultValue)
-		}
-
 		table.Append([]string{
 			short,
 			p.options.prefixLong + property.Path.key(p.options, "i"),
 			property.Type,
-			defValue,
 			property.Path.Usage(),
 		})
+
+		if property.DefaultValue != nil {
+			table.Append([]string{
+				"",
+				"",
+				"",
+				fmt.Sprintf("Default: %v", property.DefaultValue),
+			})
+		}
 	}
 
 	table.Render()

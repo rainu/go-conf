@@ -161,11 +161,11 @@ func TestProperties_HelpText(t *testing.T) {
 		options: newDefaultOptions(),
 	}
 
-	expected := "  -k,   --a-key              string     help for key1  \n"
-	expected += "        --z-key              int32      help for key3  \n"
-	expected += "        --b-key              int64      help for key2  \n"
-	expected += "        --n.key.[i].value    float64    help: value    \n"
-	expected += "        --m.key.[key].value  float32    help: value    \n"
+	expected := "  -k,   --a-key              string   help for key1  \n"
+	expected += "        --z-key              int32    help for key3  \n"
+	expected += "        --b-key              int64    help for key2  \n"
+	expected += "        --n.key.[i].value    float64  help: value    \n"
+	expected += "        --m.key.[key].value  float32  help: value    \n"
 
 	assert.Equal(t, expected, properties.HelpFlags())
 }
@@ -182,11 +182,16 @@ func TestProperties_HelpTextWithDefaults(t *testing.T) {
 		options: newDefaultOptions(),
 	}
 
-	expected := "  -k,   --a-key              string   (default: default)  help for key1  \n"
-	expected += "        --z-key              int32    (default: 13)       help for key3  \n"
-	expected += "        --b-key              int64    (default: 12)       help for key2  \n"
-	expected += "        --n.key.[i].value    float64  (default: 13.12)    help: value    \n"
-	expected += "        --m.key.[key].value  float32  (default: 12.13)    help: value    \n"
+	expected := "  -k,   --a-key              string   help for key1     \n"
+	expected += "                                      Default: default  \n"
+	expected += "        --z-key              int32    help for key3     \n"
+	expected += "                                      Default: 13       \n"
+	expected += "        --b-key              int64    help for key2     \n"
+	expected += "                                      Default: 12       \n"
+	expected += "        --n.key.[i].value    float64  help: value       \n"
+	expected += "                                      Default: 13.12    \n"
+	expected += "        --m.key.[key].value  float32  help: value       \n"
+	expected += "                                      Default: 12.13    \n"
 
 	assert.Equal(t, expected, properties.HelpFlags())
 }
