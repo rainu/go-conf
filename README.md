@@ -1,3 +1,8 @@
+[![Go](https://github.com/rainu/go-conf/actions/workflows/build.yml/badge.svg)](https://github.com/rainu/go-conf/actions/workflows/build.yml)
+[![codecov](https://codecov.io/gh/rainu/go-conf/branch/main/graph/badge.svg)](https://codecov.io/gh/rainu/go-conf)
+[![Go Report Card](https://goreportcard.com/badge/github.com/rainu/go-conf)](https://goreportcard.com/report/github.com/rainu/go-conf)
+[![Go Reference](https://pkg.go.dev/badge/github.com/rainu/go-conf.svg)](https://pkg.go.dev/github.com/rainu/go-conf)
+
 # go-conf
 
 This library can parse command line flags, environment variables, and configuration files.
