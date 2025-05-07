@@ -15,9 +15,11 @@ type Reader struct {
 
 	running bool
 
-	keyValRegex *regexp.Regexp
-	options     Options
-	args        []string
+	reKeyVal     *regexp.Regexp
+	reKeyValFlag *regexp.Regexp
+
+	options Options
+	args    []string
 }
 
 func newReader(args []string, options Options) *Reader {
@@ -27,7 +29,8 @@ func newReader(args []string, options Options) *Reader {
 	}
 	r.r, r.w = io.Pipe()
 
-	r.keyValRegex = regexp.MustCompile(`^` + options.prefix + `([^` + string(options.assignSign) + `]*)` + string(options.assignSign) + `(.*)$`)
+	r.reKeyVal = regexp.MustCompile(`^` + options.prefixLong + `([^` + string(options.assignSign) + `]*)` + string(options.assignSign) + `(.*)$`)
+	r.reKeyValFlag = regexp.MustCompile(`^` + options.prefixLong + `([^` + string(options.assignSign) + `]*)$`)
 
 	return r
 }
@@ -96,14 +99,20 @@ func (r *Reader) collectLines() []line {
 
 	for i := 0; i < len(r.args); i += 1 {
 		key := r.args[i]
+		var value string
 
-		result := r.keyValRegex.FindAllStringSubmatch(key, -1)
-		if len(result) != 1 {
+		longResult := r.reKeyVal.FindAllStringSubmatch(key, -1)
+		flagResult := r.reKeyValFlag.FindAllStringSubmatch(key, -1)
+
+		if len(longResult) == 1 {
+			key = longResult[0][1]
+			value = longResult[0][2]
+		} else if len(flagResult) == 1 {
+			key = flagResult[0][1]
+			value = "true"
+		} else {
 			continue
 		}
-
-		key = result[0][1]
-		value := result[0][2]
 
 		lines = append(lines, line{
 			path:  r.splitPreservingBrackets(key),

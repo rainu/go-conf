@@ -207,7 +207,7 @@ func (p Properties) HelpFlags() string {
 	for _, property := range p.p {
 		short := property.Short
 		if short != "" {
-			short = "-" + short
+			short = p.options.prefixShort + short
 			short += ", "
 		}
 		defValue := ""
@@ -217,7 +217,7 @@ func (p Properties) HelpFlags() string {
 
 		table.Append([]string{
 			short,
-			p.options.prefix + property.Path.key(p.options, "i"),
+			p.options.prefixLong + property.Path.key(p.options, "i"),
 			property.Type,
 			defValue,
 			property.Path.Usage(),
@@ -232,7 +232,7 @@ func (p Properties) HelpYaml() string {
 	fakeArgs := make([]string, 0, len(p.p))
 
 	for _, property := range p.p {
-		arg := p.options.prefix
+		arg := p.options.prefixLong
 		arg += property.Path.key(p.options, "0")
 		arg += string(p.options.assignSign)
 		arg += property.Type

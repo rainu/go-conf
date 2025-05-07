@@ -7,6 +7,8 @@ import (
 )
 
 type testConfig struct {
+	Bool        bool                 `yaml:"bool"`
+	Bool2       bool                 `yaml:"bool2"`
 	String      string               `yaml:"string" short:"s" usage:"This is a string"`
 	StringArray []string             `yaml:"string-array"`
 	RawMap      map[string]any       `yaml:"raw-map"`
@@ -36,6 +38,8 @@ func Test_DefaultConfig(t *testing.T) {
 	conf := testConfig{}
 
 	args := []string{
+		"--bool",
+		"--bool2=true",
 		"--string=hello",
 		"--array.[0].key=name0",
 		"--array.[0].value=value0",
@@ -52,6 +56,8 @@ func Test_DefaultConfig(t *testing.T) {
 
 	assert.NoError(t, NewConfig(&conf).Parse(args))
 	assert.Equal(t, testConfig{
+		Bool:   true,
+		Bool2:  true,
 		String: "hello",
 		CustomArray: []testEntry{
 			{Key: "name0", Value: "value0"},
@@ -105,6 +111,8 @@ func TestConfig_HelpFlags(t *testing.T) {
 
 	expected := "        --array.[i].key    string                                    The key of the entry                    \n"
 	expected += "        --array.[i].value  string                (default: DEFAULT)  The value of the entry                  \n"
+	expected += "        --bool             bool                                                                              \n"
+	expected += "        --bool2            bool                                                                              \n"
 	expected += "        --entry.key        string                                    The base entry: The key of the entry    \n"
 	expected += "        --entry.value      string                (default: DEFAULT)  The base entry: The value of the entry  \n"
 	expected += "        --map.[key].key    string                                    The key of the entry                    \n"
@@ -126,6 +134,8 @@ func TestConfig_HelpYaml(t *testing.T) {
   -
     "key": string # The key of the entry
     "value": string # The value of the entry
+"bool": bool
+"bool2": bool
 "entry":
   "key": string # The base entry: The key of the entry
   "value": string # The base entry: The value of the entry

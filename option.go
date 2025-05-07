@@ -8,7 +8,9 @@ import (
 type Options struct {
 	keyDelimiter rune
 	assignSign   rune
-	prefix       string
+
+	prefixLong  string
+	prefixShort string
 
 	usageTag string
 
@@ -20,7 +22,8 @@ func newDefaultOptions() Options {
 	return Options{
 		keyDelimiter: '.',
 		assignSign:   '=',
-		prefix:       "--",
+		prefixLong:   "--",
+		prefixShort:  "-",
 		usageTag:     "usage",
 	}
 }
@@ -41,10 +44,17 @@ func WithAssignSign(sign rune) Option {
 	}
 }
 
-// WithPrefix sets the prefix for the keys. Default is "--".
-func WithPrefix(prefix string) Option {
+// WithPrefixLong sets the prefix for the keys (long variant). Default is "--".
+func WithPrefixLong(prefix string) Option {
 	return func(o *Options) {
-		o.prefix = prefix
+		o.prefixLong = prefix
+	}
+}
+
+// WithPrefixShort sets the prefix for the keys (short variant). Default is "-".
+func WithPrefixShort(prefix string) Option {
+	return func(o *Options) {
+		o.prefixShort = prefix
 	}
 }
 

@@ -14,6 +14,7 @@ func TestReader(t *testing.T) {
 		"--string=hello",
 		"--mystring=hello",
 		"--bool=true",
+		"--bool-flag",
 		"--float=3.14",
 		"--inner.name=name",
 		"--inner.value=value",
@@ -51,6 +52,7 @@ func TestReader(t *testing.T) {
         "name": name1
         "value": value1
 "bool": true
+"bool-flag": true
 "float": 3.14
 "inner-map":
   "space key":
