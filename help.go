@@ -219,9 +219,16 @@ func (p Properties) HelpFlags() string {
 			short = p.options.prefixShort + short
 			short += ", "
 		}
+		long := p.options.prefixLong + property.Path.key(p.options, "i")
+		if strings.HasPrefix(property.Type, "[]") {
+			long += ".[i]"
+		} else if strings.HasPrefix(property.Type, "map[") {
+			long += ".[key]"
+		}
+
 		table.Append([]string{
 			short,
-			p.options.prefixLong + property.Path.key(p.options, "i"),
+			long,
 			property.Type,
 			property.Path.Usage(),
 		})
