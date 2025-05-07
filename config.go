@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/goccy/go-yaml"
+	"io"
 	"os"
 	"regexp"
 )
@@ -13,10 +14,11 @@ type Config struct {
 	dest any
 }
 
-func NewConfig[T any](dest *T, opts ...Option) *Config {
+// NewConfig creates a new Config instance where all parse-results will be reflected in the given destination.
+func NewConfig[T any](destination *T, opts ...Option) *Config {
 	p := &Config{
 		options: newDefaultOptions(),
-		dest:    dest,
+		dest:    destination,
 	}
 
 	// apply options
@@ -27,21 +29,32 @@ func NewConfig[T any](dest *T, opts ...Option) *Config {
 	return p
 }
 
-func (c *Config) ParseOsArgs() error {
-	return c.Parse(os.Args[1:])
-}
-
-func (c *Config) Parse(args []string) error {
-	properties := c.collectHelpProperties()
-	reader := newReader(args, &properties, c.options)
+// ParseYaml parses the given YAML reader and sets the values in the destination struct.
+func (c *Config) ParseYaml(reader io.Reader) error {
 	return yaml.NewDecoder(reader, c.options.decodeOptions...).Decode(c.dest)
 }
 
-func (c *Config) ParseOsEnv() error {
-	return c.ParseEnv(os.Environ())
+// ParseOsArgs parses the command line arguments (os.Args[1:]) and sets the values in the destination struct.
+func (c *Config) ParseOsArgs() error {
+	return c.ParseArgs(os.Args[1:]...)
 }
 
-func (c *Config) ParseEnv(env []string) error {
+// ParseArgs parses the given arguments and sets the values in the destination struct.
+func (c *Config) ParseArgs(args ...string) error {
+	properties := c.collectHelpProperties()
+	reader := newReader(args, &properties, c.options)
+	defer reader.Close()
+
+	return c.ParseYaml(reader)
+}
+
+// ParseOsEnv parses the environment variables (os.Environ()) and sets the values in the destination struct.
+func (c *Config) ParseOsEnv() error {
+	return c.ParseEnv(os.Environ()...)
+}
+
+// ParseEnv parses the given environment variables and sets the values in the destination struct.
+func (c *Config) ParseEnv(env ...string) error {
 	if c.options.prefixEnv == "" {
 		return nil
 	}
@@ -60,13 +73,15 @@ func (c *Config) ParseEnv(env []string) error {
 		}
 	}
 
-	return c.Parse(args)
+	return c.ParseArgs(args...)
 }
 
+// HelpFlags returns the help text for the flags in a table format.
 func (c *Config) HelpFlags() string {
 	return c.collectHelpProperties().HelpFlags()
 }
 
+// HelpYaml returns the help text for the flags in a YAML format.
 func (c *Config) HelpYaml() string {
 	return c.collectHelpProperties().HelpYaml()
 }

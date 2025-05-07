@@ -5,9 +5,14 @@
 
 # go-conf
 
-This library can parse command line flags, environment variables, and configuration files.
+This library parses command line flags, environment variables, and configuration files (yaml) into a struct.
+
+The "key-mechanic" is to convert command line arguments to yaml-content and then use [yaml parser](github.com/goccy/go-yaml) to parse the content into a struct.
+Therefore, you have to use the yaml-tags for defining the key names.
 
 # How to use it
+
+## Basic usage
 
 ```go
 package main
@@ -17,82 +22,176 @@ import (
 )
 
 type MyConfig struct {
-	String      string             `yaml:"string" short:"s" usage:"This is a string"`
-	StringArray []string           `yaml:"string-array"`
-	RawMap      map[string]any     `yaml:"raw-map"`
-	CustomArray []MyEntry          `yaml:"array"`
-	CustomMap   map[string]MyEntry `yaml:"map"`
-
-	Entry MyEntry `yaml:"entry" usage:"The base entry: "`
-}
-
-type MyEntry struct {
-	Key   string `yaml:"key" usage:"The key of the entry"`
-	Value string `yaml:"value"`
-}
-
-func SetDefaults(t *MyEntry) {
-	t.Value = "DEFAULT"
+	Help bool `yaml:"help" short:"h" usage:"Show help"`
 }
 
 func main() {
 	c := MyConfig{}
 
-	config := conf.NewConfig(&c,
-		conf.WithDefaults(SetDefaults), // function to set default values for "MyEntry"
-	)
+	config := conf.NewConfig(&c)
+	err := config.ParseArgs("--help")
+	if err != nil {
+        panic(err)
+    }
+	if c.Help {
+		println(config.HelpFlags())
+        return
+	}
+}
+```
 
-	config.Parse([]string{
-		"--string=hello",
-		"--array.[0].key=name0",
-		"--array.[0].value=value0",
-		"--array.[1].key=name1",
-		"--array.[1].value=value1",
-		"--map.test1.key=name1",
-		"--map.test1.value=value1",
-		"--map.[test 2].key=name2",
-		"--map.[test 2].value=value2",
-		"--raw-map.string=value",
-		"--raw-map.number=2",
-		"--raw-map.[key with space]=value",
-	})
+## Parse environment
 
-	// print help
-	println(config.HelpFlags())
+```go
+package main
 
-	// print yaml example
-	println(config.HelpYaml())
+import (
+	conf "github.com/rainu/go-conf"
+)
+
+type MyConfig struct {
+	Help bool `yaml:"help" short:"h" usage:"Show help"`
 }
 
+func main() {
+	c := MyConfig{}
+
+	config := conf.NewConfig(&c)
+	err := config.ParseEnv("CFG_0=--help")
+	if err != nil {
+        panic(err)
+    }
+	if c.Help {
+		println(config.HelpFlags())
+        return
+	}
+}
 ```
 
-Output of `config.HelpFlags()`:
-```text
-        --array.[i].key    string                                    The key of the entry                    
-        --array.[i].value  string                (default: DEFAULT)  The value of the entry                  
-        --entry.key        string                                    The base entry: The key of the entry    
-        --entry.value      string                (default: DEFAULT)  The base entry: The value of the entry  
-        --map.[key].key    string                                    The key of the entry                    
-        --map.[key].value  string                (default: DEFAULT)  The value of the entry                  
-        --raw-map          map[string]interface                                                              
-  -s,   --string           string                                    This is a string                        
-        --string-array     []string                                                                          
+## Parse yaml file
+
+```go
+package main
+
+import (
+	conf "github.com/rainu/go-conf"
+	"os"
+)
+
+type MyConfig struct {
+	Help bool `yaml:"help" short:"h" usage:"Show help"`
+}
+
+func main() {
+	c := MyConfig{}
+
+	config := conf.NewConfig(&c)
+	
+	yamlFile, err := os.Open("/path/to/config.yaml")
+	if err != nil {
+		panic(err)
+	}
+	defer yamlFile.Close()
+	
+	err = config.ParseYaml(yamlFile)
+	if err != nil {
+        panic(err)
+    }
+	if c.Help {
+		println(config.HelpFlags())
+        return
+	}
+}
 ```
 
-Output of `config.HelpYaml()`:
-```yaml
-"array":
-  -
-    "key": string # The key of the entry
-    "value": string # The value of the entry
-"entry":
-  "key": string # The base entry: The key of the entry
-  "value": string # The base entry: The value of the entry
-"map":
-  "key":
-    "key": string # The key of the entry
-    "value": string # The value of the entry
-"raw-map": map[string]interface
-"string": string # This is a string
-"string-array": []string
+## Define default values
+
+For applying default values you have to define a function which will be called every time a struct will be created.
+
+```go
+package main
+
+import (
+	conf "github.com/rainu/go-conf"
+)
+
+type MyConfig struct {
+	String string `yaml:"string" short:"s" usage:"String value"`
+}
+
+func Default(m *MyConfig) {
+	m.String = "default"
+}
+
+func main() {
+	c := MyConfig{}
+
+	config := conf.NewConfig(&c, conf.WithDefaults(Default))
+	err := config.ParseArgs()
+	if err != nil {
+        panic(err)
+    }
+	println(c.String) // should be "default"
+}
 ```
+
+## Define dynamic usage
+
+Sometimes you want to define a dynamic usage for a flag. Therefore, your struct must declare a function which is responsible for getting the usage.
+
+```go
+package main
+
+import (
+	conf "github.com/rainu/go-conf"
+)
+
+type MyConfig struct {
+	String string `yaml:"string" short:"s"`
+}
+
+func (c *MyConfig) GetUsage(field string) string {
+	if field == "String" {
+        return "Dynamic help for string"
+    }
+	return ""
+}
+
+func main() {
+	c := MyConfig{}
+
+	config := conf.NewConfig(&c)
+	println(config.HelpFlags())
+}
+```
+
+## Nested structs
+
+```go
+package main
+
+import (
+	conf "github.com/rainu/go-conf"
+)
+
+type MyConfig struct {
+	Inner struct {
+		Bool bool `yaml:"bool" usage:"bool"`
+	} `yaml:"inner" usage:"Inner: "`
+}
+
+func main() {
+	c := MyConfig{}
+
+	config := conf.NewConfig(&c)
+	err := config.ParseArgs("--inner.bool=true")
+	if err != nil {
+		panic(err)
+	}
+	println(config.HelpFlags())
+}
+```
+
+## More options
+
+For more options, have a look into the [options.go](./options.go) file.

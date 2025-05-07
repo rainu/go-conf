@@ -54,7 +54,7 @@ func TestConfig_Parse_DefaultConfig(t *testing.T) {
 		"--raw-map.[key with space]=value",
 	}
 
-	assert.NoError(t, NewConfig(&conf).Parse(args))
+	assert.NoError(t, NewConfig(&conf).ParseArgs(args...))
 	assert.Equal(t, testConfig{
 		Bool:   true,
 		Bool2:  true,
@@ -95,7 +95,7 @@ func TestConfig_ParseEnv(t *testing.T) {
 		"CFG_13=--raw-map.[key with space]=value",
 	}
 
-	assert.NoError(t, NewConfig(&conf).ParseEnv(env))
+	assert.NoError(t, NewConfig(&conf).ParseEnv(env...))
 	assert.Equal(t, testConfig{
 		Bool:   true,
 		Bool2:  true,
@@ -131,7 +131,7 @@ func TestConfig_Parse_WithDefaults(t *testing.T) {
 		t.Value = "DEFAULT"
 	}))
 
-	assert.NoError(t, p.Parse(args))
+	assert.NoError(t, p.ParseArgs(args...))
 	assert.Equal(t, testConfig{
 		String: "hello",
 		CustomArray: []testEntry{
