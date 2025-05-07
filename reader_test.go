@@ -1,0 +1,158 @@
+package main
+
+import (
+	"fmt"
+	"github.com/stretchr/testify/assert"
+	"io"
+	"strings"
+	"testing"
+)
+
+func TestReader(t *testing.T) {
+	args := []string{
+		"--int=42",
+		"--string=hello",
+		"--mystring=hello",
+		"--bool=true",
+		"--float=3.14",
+		"--inner.name=name",
+		"--inner.value=value",
+		"--array.[0].name=name0",
+		"--array.[0].value=value0",
+		"--array.[1].name=name1",
+		"--array.[1].value=value1",
+		"--array.[2].array.[0].name=name0",
+		"--array.[2].array.[0].value=value0",
+		"--array.[2].array.[1].name=name1",
+		"--array.[2].array.[1].value=value1",
+		"--inner-map.test1.name=name1",
+		"--inner-map.test1.value=value1",
+		"--inner-map.[space key].name=name2",
+		"--inner-map.[space key].value=value2",
+		"--map.test.key=value",
+		"--raw-map.string=value",
+		"--raw-map.number=2",
+		"--raw-map.[key with space]=value",
+	}
+	expected := `
+"array":
+  -
+    "name": name0
+    "value": value0
+  -
+    "name": name1
+    "value": value1
+  -
+    "array":
+      -
+        "name": name0
+        "value": value0
+      -
+        "name": name1
+        "value": value1
+"bool": true
+"float": 3.14
+"inner-map":
+  "space key":
+    "name": name2
+    "value": value2
+  "test1":
+    "name": name1
+    "value": value1
+"inner":
+  "name": name
+  "value": value
+"int": 42
+"map":
+  "test":
+    "key": value
+"mystring": hello
+"raw-map":
+  "key with space": value
+  "number": 2
+  "string": value
+"string": hello
+`
+
+	result, err := io.ReadAll(newReader(args, newDefaultOptions()))
+	assert.NoError(t, err)
+	assert.Equal(t, strings.TrimSpace(expected), strings.TrimSpace(string(result)))
+}
+
+func Test_collectLines(t *testing.T) {
+	tests := []struct {
+		given    []string
+		expected []line
+	}{
+		{
+			given: []string{"--key1=value1", "--key2=value2"},
+			expected: []line{
+				{path: []string{"key1"}, value: "value1"},
+				{path: []string{"key2"}, value: "value2"},
+			},
+		},
+		{
+			given: []string{"--deep.key1=value1", "--deep.key2=value2"},
+			expected: []line{
+				{path: []string{"deep", "key1"}, value: "value1"},
+				{path: []string{"deep", "key2"}, value: "value2"},
+			},
+		},
+		{
+			given: []string{"--array.[0].key=value1", "--array.[1].key=value2"},
+			expected: []line{
+				{path: []string{"array", "[0]", "key"}, value: "value1"},
+				{path: []string{"array", "[1]", "key"}, value: "value2"},
+			},
+		},
+		{
+			given: []string{"--map.[key with space].key=value"},
+			expected: []line{
+				{path: []string{"map", "[key with space]", "key"}, value: "value"},
+			},
+		},
+		{
+			given: []string{"--map.[key-with.].key=value"},
+			expected: []line{
+				{path: []string{"map", "[key-with.]", "key"}, value: "value"},
+			},
+		},
+		{
+			given: []string{"-ignore", "me", "--not=me"},
+			expected: []line{
+				{path: []string{"not"}, value: "me"},
+			},
+		},
+		{
+			given: []string{"--key=value=with=equals"},
+			expected: []line{
+				{path: []string{"key"}, value: "value=with=equals"},
+			},
+		},
+		{
+			given: []string{"--raw-map.string=value"},
+			expected: []line{
+				{path: []string{"raw-map", "string"}, value: "value"},
+			},
+		},
+		{
+			given: []string{"--raw-map.number=2"},
+			expected: []line{
+				{path: []string{"raw-map", "number"}, value: "2"},
+			},
+		},
+		{
+			given: []string{"--raw-map.[key with space]=value"},
+			expected: []line{
+				{path: []string{"raw-map", "[key with space]"}, value: "value"},
+			},
+		},
+	}
+
+	for i, tt := range tests {
+		t.Run(fmt.Sprintf("%s_%d", t.Name(), i), func(t *testing.T) {
+			r := newReader(tt.given, newDefaultOptions())
+			assert.Equal(t, tt.expected, r.collectLines())
+		})
+	}
+}
