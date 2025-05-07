@@ -11,6 +11,7 @@ type Options struct {
 
 	prefixLong  string
 	prefixShort string
+	prefixEnv   string
 
 	usageTag string
 
@@ -24,6 +25,7 @@ func newDefaultOptions() Options {
 		assignSign:   '=',
 		prefixLong:   "--",
 		prefixShort:  "-",
+		prefixEnv:    "CFG_",
 		usageTag:     "usage",
 	}
 }
@@ -55,6 +57,13 @@ func WithPrefixLong(prefix string) Option {
 func WithPrefixShort(prefix string) Option {
 	return func(o *Options) {
 		o.prefixShort = prefix
+	}
+}
+
+// WithPrefixEnv sets the prefix for environment variables. Default is "CFG_".
+func WithPrefixEnv(prefix string) Option {
+	return func(o *Options) {
+		o.prefixEnv = prefix
 	}
 }
 

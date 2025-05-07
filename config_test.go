@@ -34,7 +34,7 @@ func SetDefaults(t *testEntry) {
 	t.Value = "DEFAULT"
 }
 
-func Test_DefaultConfig(t *testing.T) {
+func TestConfig_Parse_DefaultConfig(t *testing.T) {
 	conf := testConfig{}
 
 	args := []string{
@@ -75,7 +75,48 @@ func Test_DefaultConfig(t *testing.T) {
 	}, conf)
 }
 
-func TestConfig_WithDefaults(t *testing.T) {
+func TestConfig_ParseEnv(t *testing.T) {
+	conf := testConfig{}
+
+	env := []string{
+		"CFG_0=--bool",
+		"CFG_1=--bool2=true",
+		"CFG_2=--string=hello",
+		"CFG_3=--array.[0].key=name0",
+		"CFG_4=--array.[0].value=value0",
+		"CFG_5=--array.[1].key=name1",
+		"CFG_6=--array.[1].value=value1",
+		"CFG_7=--map.test1.key=name1",
+		"CFG_8=--map.test1.value=value1",
+		"CFG_9=--map.[test 2].key=name2",
+		"CFG_10=--map.[test 2].value=value2",
+		"CFG_11=--raw-map.string=value",
+		"CFG_12=--raw-map.number=2",
+		"CFG_13=--raw-map.[key with space]=value",
+	}
+
+	assert.NoError(t, NewConfig(&conf).ParseEnv(env))
+	assert.Equal(t, testConfig{
+		Bool:   true,
+		Bool2:  true,
+		String: "hello",
+		CustomArray: []testEntry{
+			{Key: "name0", Value: "value0"},
+			{Key: "name1", Value: "value1"},
+		},
+		CustomMap: map[string]testEntry{
+			"test1":  {Key: "name1", Value: "value1"},
+			"test 2": {Key: "name2", Value: "value2"},
+		},
+		RawMap: map[string]any{
+			"string":         "value",
+			"key with space": "value",
+			"number":         uint64(2),
+		},
+	}, conf)
+}
+
+func TestConfig_Parse_WithDefaults(t *testing.T) {
 	conf := testConfig{}
 
 	args := []string{
