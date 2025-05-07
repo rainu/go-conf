@@ -12,6 +12,10 @@ func TestReader(t *testing.T) {
 	args := []string{
 		"--int=42",
 		"--string=hello",
+		"--string-array.[0]=value1",
+		"--string-array.[1]=value2",
+		"--int-array.[0]=1",
+		"--int-array.[1]=2",
 		"--mystring=hello",
 		"--bool=true",
 		"--bool-flag",
@@ -65,6 +69,9 @@ func TestReader(t *testing.T) {
   "name": name
   "value": value
 "int": 42
+"int-array":
+  - 1
+  - 2
 "map":
   "test":
     "key": value
@@ -74,6 +81,9 @@ func TestReader(t *testing.T) {
   "number": 2
   "string": value
 "string": hello
+"string-array":
+  - value1
+  - value2
 `
 
 	result, err := io.ReadAll(newReader(args, nil, newDefaultOptions()))

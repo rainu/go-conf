@@ -52,6 +52,8 @@ func TestConfig_Parse_DefaultConfig(t *testing.T) {
 		"--raw-map.string=value",
 		"--raw-map.number=2",
 		"--raw-map.[key with space]=value",
+		"--string-array.[0]=value1",
+		"--string-array.[1]=value2",
 	}
 
 	assert.NoError(t, NewConfig(&conf).ParseArgs(args...))
@@ -59,6 +61,10 @@ func TestConfig_Parse_DefaultConfig(t *testing.T) {
 		Bool:   true,
 		Bool2:  true,
 		String: "hello",
+		StringArray: []string{
+			"value1",
+			"value2",
+		},
 		CustomArray: []testEntry{
 			{Key: "name0", Value: "value0"},
 			{Key: "name1", Value: "value1"},

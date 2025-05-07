@@ -8,6 +8,7 @@ import (
 )
 
 var indexRegex = regexp.MustCompile(`^\[[0-9]+\]$`)
+var onlyNumberRegex = regexp.MustCompile(`^[0-9]+$`)
 
 type Reader struct {
 	r *io.PipeReader
@@ -70,11 +71,19 @@ func (r *Reader) run() {
 					r.w.Write([]byte(indent))
 					segment = strings.TrimPrefix(segment, "[")
 					segment = strings.TrimSuffix(segment, "]")
-					r.w.Write([]byte("\""))
-					r.w.Write([]byte(segment))
-					r.w.Write([]byte("\": "))
-					r.w.Write([]byte(l.value))
-					r.w.Write([]byte("\n"))
+
+					if onlyNumberRegex.MatchString(segment) {
+						// this is a primitive array value
+						r.w.Write([]byte("- "))
+						r.w.Write([]byte(l.value))
+						r.w.Write([]byte("\n"))
+					} else {
+						r.w.Write([]byte("\""))
+						r.w.Write([]byte(segment))
+						r.w.Write([]byte("\": "))
+						r.w.Write([]byte(l.value))
+						r.w.Write([]byte("\n"))
+					}
 				} else {
 					if strings.HasPrefix(segment, "[") && indexRegex.MatchString(segment) {
 						// "<indent>-"  (Array-Element)
