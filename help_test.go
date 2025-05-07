@@ -161,11 +161,11 @@ func TestProperties_HelpText(t *testing.T) {
 		options: newDefaultOptions(),
 	}
 
-	expected := "  -k,   --a-key              string   help for key1  \n"
-	expected += "        --z-key              int32    help for key3  \n"
-	expected += "        --b-key              int64    help for key2  \n"
-	expected += "        --n.key.[i].value    float64  help: value    \n"
-	expected += "        --m.key.[key].value  float32  help: value    \n"
+	expected := "  -k,   --a-key            string   help for key1  \n"
+	expected += "        --z-key            int32    help for key3  \n"
+	expected += "        --b-key            int64    help for key2  \n"
+	expected += "        --n.key.[i].value  float64  help: value    \n"
+	expected += "        --m.key.[k].value  float32  help: value    \n"
 
 	assert.Equal(t, expected, properties.HelpFlags())
 }
@@ -182,16 +182,16 @@ func TestProperties_HelpTextWithDefaults(t *testing.T) {
 		options: newDefaultOptions(),
 	}
 
-	expected := "  -k,   --a-key              string   help for key1     \n"
-	expected += "                                      Default: default  \n"
-	expected += "        --z-key              int32    help for key3     \n"
-	expected += "                                      Default: 13       \n"
-	expected += "        --b-key              int64    help for key2     \n"
-	expected += "                                      Default: 12       \n"
-	expected += "        --n.key.[i].value    float64  help: value       \n"
-	expected += "                                      Default: 13.12    \n"
-	expected += "        --m.key.[key].value  float32  help: value       \n"
-	expected += "                                      Default: 12.13    \n"
+	expected := "  -k,   --a-key            string   help for key1     \n"
+	expected += "                                    Default: default  \n"
+	expected += "        --z-key            int32    help for key3     \n"
+	expected += "                                    Default: 13       \n"
+	expected += "        --b-key            int64    help for key2     \n"
+	expected += "                                    Default: 12       \n"
+	expected += "        --n.key.[i].value  float64  help: value       \n"
+	expected += "                                    Default: 13.12    \n"
+	expected += "        --m.key.[k].value  float32  help: value       \n"
+	expected += "                                    Default: 12.13    \n"
 
 	assert.Equal(t, expected, properties.HelpFlags())
 }
@@ -213,7 +213,7 @@ func TestProperties_HelpTextYaml(t *testing.T) {
 "b": string # help for b
 "m":
   "inner":
-    "key":
+    "k":
       "value": int32 # help: value
 "n":
   "inner":

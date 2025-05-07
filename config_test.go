@@ -176,10 +176,10 @@ func TestConfig_HelpFlags(t *testing.T) {
 	expected += "        --entry.key         string                The base entry: The key of the entry    \n"
 	expected += "        --entry.value       string                The base entry: The value of the entry  \n"
 	expected += "                                                  Default: DEFAULT                        \n"
-	expected += "        --map.[key].key     string                The key of the entry                    \n"
-	expected += "        --map.[key].value   string                The value of the entry                  \n"
+	expected += "        --map.[k].key       string                The key of the entry                    \n"
+	expected += "        --map.[k].value     string                The value of the entry                  \n"
 	expected += "                                                  Default: DEFAULT                        \n"
-	expected += "        --raw-map.[key]     map[string]interface                                          \n"
+	expected += "        --raw-map.[k]       map[string]interface                                          \n"
 	expected += "  -s,   --string            string                This is a string                        \n"
 	expected += "        --string-array.[i]  []string                                                      \n"
 
@@ -202,7 +202,7 @@ func TestConfig_HelpYaml(t *testing.T) {
   "key": string # The base entry: The key of the entry
   "value": string # The base entry: The value of the entry
 "map":
-  "key":
+  "k":
     "key": string # The key of the entry
     "value": string # The value of the entry
 "raw-map": map[string]interface

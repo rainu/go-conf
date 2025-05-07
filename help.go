@@ -174,7 +174,7 @@ func (p path) key(opts Options, sliceKey string) string {
 			sb.WriteRune(']')
 		} else if pc.isMap {
 			sb.WriteRune(opts.keyDelimiter)
-			sb.WriteString("[key]")
+			sb.WriteString("[k]")
 		}
 	}
 
@@ -223,7 +223,7 @@ func (p Properties) HelpFlags() string {
 		if strings.HasPrefix(property.Type, "[]") {
 			long += ".[i]"
 		} else if strings.HasPrefix(property.Type, "map[") {
-			long += ".[key]"
+			long += ".[k]"
 		}
 
 		table.Append([]string{
