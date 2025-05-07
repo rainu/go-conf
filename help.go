@@ -81,7 +81,7 @@ func (c *Config) collect(t reflect.Type, parent path, properties *[]Property) {
 			}
 		}
 
-		shortTag := field.Tag.Get("short")
+		shortTag := field.Tag.Get(c.options.shortTag)
 
 		switch field.Type.Kind() {
 		case reflect.Struct:

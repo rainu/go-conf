@@ -14,20 +14,24 @@ type Options struct {
 	prefixEnv   string
 
 	usageTag string
+	shortTag string
 
 	defaultSetter map[reflect.Type]func(any)
 	decodeOptions []yaml.DecodeOption
 }
 
 func newDefaultOptions() Options {
-	return Options{
-		keyDelimiter: '.',
-		assignSign:   '=',
-		prefixLong:   "--",
-		prefixShort:  "-",
-		prefixEnv:    "CFG_",
-		usageTag:     "usage",
-	}
+	opts := Options{}
+
+	WithKeyDelimiter('.')(&opts)
+	WithAssignSign('=')(&opts)
+	WithPrefixLong("--")(&opts)
+	WithPrefixShort("-")(&opts)
+	WithPrefixEnv("CFG_")(&opts)
+	WithUsageTag("usage")(&opts)
+	WithShortTag("short")(&opts)
+
+	return opts
 }
 
 type Option func(*Options)
@@ -71,6 +75,13 @@ func WithPrefixEnv(prefix string) Option {
 func WithUsageTag(tag string) Option {
 	return func(o *Options) {
 		o.usageTag = tag
+	}
+}
+
+// WithShortTag sets the tag for short usage. Default is "short".
+func WithShortTag(tag string) Option {
+	return func(o *Options) {
+		o.shortTag = tag
 	}
 }
 
