@@ -1,6 +1,7 @@
 package conf
 
 import (
+	"fmt"
 	"io"
 	"regexp"
 	"slices"
@@ -127,8 +128,27 @@ func (r *Reader) collectLines() []line {
 			}
 		}
 
+		path := r.splitPreservingBrackets(key)
+		if r.fieldInfos != nil {
+			lastNode := path[len(path)-1]
+			if !strings.HasSuffix(lastNode, "]") {
+				// check the type of the corresponding field
+				// it could be a slice ...
+				info := r.fieldInfos.findByPath(path)
+				if info != nil && strings.HasPrefix(info.Type, "[]") {
+					// this is a slice, but the argument has no index given
+					// so here we add the index
+					// "i" is not the correct index,
+					// but is only necessary that the index is an increasing number
+					// (because of the sorting later)
+					path = append(path, fmt.Sprintf("[%d]", i))
+				}
+			}
+
+		}
+
 		lines = append(lines, line{
-			path:  r.splitPreservingBrackets(key),
+			path:  path,
 			value: value,
 		})
 	}

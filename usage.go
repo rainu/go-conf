@@ -54,9 +54,7 @@ func (p fieldInfos) HelpFlags() string {
 			short += ", "
 		}
 		long := p.options.prefixLong + property.Path.key(p.options, "i")
-		if strings.HasPrefix(property.Type, "[]") {
-			long += ".[i]"
-		} else if strings.HasPrefix(property.Type, "map[") {
+		if strings.HasPrefix(property.Type, "map[") {
 			long += ".[k]"
 		}
 

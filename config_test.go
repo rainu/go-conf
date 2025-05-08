@@ -10,7 +10,7 @@ type testConfig struct {
 	Bool        bool                 `yaml:"bool"`
 	Bool2       bool                 `yaml:"bool2"`
 	String      string               `yaml:"string" short:"s" usage:"This is a string"`
-	StringArray []string             `yaml:"string-array"`
+	StringArray []string             `yaml:"string-array" short:"a"`
 	RawMap      map[string]any       `yaml:"raw-map"`
 	CustomArray []testEntry          `yaml:"array"`
 	CustomMap   map[string]testEntry `yaml:"map"`
@@ -49,11 +49,12 @@ func TestConfig_Parse_DefaultConfig(t *testing.T) {
 		"--map.test1.value=value1",
 		"--map.[test 2].key=name2",
 		"--map.[test 2].value=value2",
-		"--raw-map.string=value",
+		"--raw-map.string=\"*&.<>/{}|\"",
 		"--raw-map.number=2",
 		"--raw-map.[key with space]=value",
 		"--string-array.[0]=value1",
 		"--string-array.[1]=value2",
+		"--string-array.[2]=\"*&.<>/{}|\"",
 	}
 
 	assert.NoError(t, NewConfig(&conf).ParseArguments(args...))
@@ -64,6 +65,7 @@ func TestConfig_Parse_DefaultConfig(t *testing.T) {
 		StringArray: []string{
 			"value1",
 			"value2",
+			"*&.<>/{}|",
 		},
 		CustomArray: []testEntry{
 			{Key: "name0", Value: "value0"},
@@ -74,9 +76,62 @@ func TestConfig_Parse_DefaultConfig(t *testing.T) {
 			"test 2": {Key: "name2", Value: "value2"},
 		},
 		RawMap: map[string]any{
-			"string":         "value",
+			"string":         "*&.<>/{}|",
 			"key with space": "value",
 			"number":         uint64(2),
+		},
+	}, conf)
+}
+
+func TestConfig_Parse_PrimitiveArray(t *testing.T) {
+	conf := testConfig{}
+
+	args := []string{
+		"--string-array=value1",
+		"--string-array=value2",
+		"--string-array=\"*&.<>/{}|\"",
+	}
+
+	assert.NoError(t, NewConfig(&conf).ParseArguments(args...))
+	assert.Equal(t, testConfig{
+		StringArray: []string{
+			"value1",
+			"value2",
+			"*&.<>/{}|",
+		},
+	}, conf)
+}
+
+func TestConfig_Parse_ShortPrimitiveArray(t *testing.T) {
+	conf := testConfig{}
+
+	args := []string{
+		"-a=value1",
+		"-a=value2",
+		"-a=\"*&.<>/{}|\"",
+	}
+
+	assert.NoError(t, NewConfig(&conf).ParseArguments(args...))
+	assert.Equal(t, testConfig{
+		StringArray: []string{
+			"value1",
+			"value2",
+			"*&.<>/{}|",
+		},
+	}, conf)
+}
+
+func TestConfig_Parse_PrimitiveArray_Single(t *testing.T) {
+	conf := testConfig{}
+
+	args := []string{
+		"--string-array=value1",
+	}
+
+	assert.NoError(t, NewConfig(&conf).ParseArguments(args...))
+	assert.Equal(t, testConfig{
+		StringArray: []string{
+			"value1",
 		},
 	}, conf)
 }
@@ -141,7 +196,7 @@ func TestConfig_Parse_WithDefaults(t *testing.T) {
 	conf := testConfig{}
 
 	args := []string{
-		"--string=hello",
+		"-s=hello",
 		"--array.[0].key=name0",
 		"--array.[1].key=name1",
 		"--map.test1.key=name1",
@@ -182,20 +237,20 @@ func TestConfig_HelpFlags(t *testing.T) {
 		}),
 	)
 
-	expected := "        --array.[i].key     string                The key of the entry                    \n"
-	expected += "        --array.[i].value   string                The value of the entry                  \n"
-	expected += "                                                  Default: DEFAULT                        \n"
-	expected += "        --bool              bool                  Bool usage                              \n"
-	expected += "        --bool2             bool                                                          \n"
-	expected += "        --entry.key         string                The base entry: The key of the entry    \n"
-	expected += "        --entry.value       string                The base entry: The value of the entry  \n"
-	expected += "                                                  Default: DEFAULT                        \n"
-	expected += "        --map.[k].key       string                The key of the entry                    \n"
-	expected += "        --map.[k].value     string                The value of the entry                  \n"
-	expected += "                                                  Default: DEFAULT                        \n"
-	expected += "        --raw-map.[k]       map[string]interface                                          \n"
-	expected += "  -s,   --string            string                This is a string                        \n"
-	expected += "        --string-array.[i]  []string                                                      \n"
+	expected := "        --array.[i].key    string                The key of the entry                    \n"
+	expected += "        --array.[i].value  string                The value of the entry                  \n"
+	expected += "                                                 Default: DEFAULT                        \n"
+	expected += "        --bool             bool                  Bool usage                              \n"
+	expected += "        --bool2            bool                                                          \n"
+	expected += "        --entry.key        string                The base entry: The key of the entry    \n"
+	expected += "        --entry.value      string                The base entry: The value of the entry  \n"
+	expected += "                                                 Default: DEFAULT                        \n"
+	expected += "        --map.[k].key      string                The key of the entry                    \n"
+	expected += "        --map.[k].value    string                The value of the entry                  \n"
+	expected += "                                                 Default: DEFAULT                        \n"
+	expected += "        --raw-map.[k]      map[string]interface                                          \n"
+	expected += "  -s,   --string           string                This is a string                        \n"
+	expected += "  -a,   --string-array     []string                                                      \n"
 
 	assert.Equal(t, expected, toTest.HelpFlags())
 }
@@ -225,4 +280,47 @@ func TestConfig_HelpYaml(t *testing.T) {
 `
 
 	assert.Equal(t, strings.TrimSpace(expected), strings.TrimSpace(toTest.HelpYaml()))
+}
+
+type parent struct {
+	Child `yaml:",inline" usage:"Test"`
+}
+
+type Child struct {
+	String string            `yaml:"string"`
+	Array  []string          `yaml:"array" usage:"array"`
+	Map    map[string]string `yaml:"map" usage:"map"`
+}
+
+func TestConfig_ShadowStructs(t *testing.T) {
+	c := &parent{}
+	config := NewConfig(c)
+
+	assert.NoError(t, config.ParseArguments(
+		"--string=hello",
+		"--array.[0]=0",
+		"--array.[1]=1",
+		"--map.[one]=1",
+		"--map.[two]=2",
+	))
+	assert.Equal(t, parent{
+		Child{
+			String: "hello",
+			Array:  []string{"0", "1"},
+			Map:    map[string]string{"one": "1", "two": "2"},
+		},
+	}, *c)
+
+	eArgs := "    --array    []string           array  \n"
+	eArgs += "    --map.[k]  map[string]string  map    \n"
+	eArgs += "    --string   string                    \n"
+
+	assert.Equal(t, eArgs, config.HelpFlags())
+
+	eYaml := `
+"array": []string # array
+"map": map[string]string # map
+"string": string
+`
+	assert.Equal(t, strings.TrimSpace(eYaml), strings.TrimSpace(config.HelpYaml()))
 }

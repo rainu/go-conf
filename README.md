@@ -261,6 +261,33 @@ func main() {
 }
 ```
 
+## Shadow structs
+
+```go
+package main
+
+import (
+	"github.com/rainu/go-conf"
+)
+
+type MyConfig struct {
+	Inner struct {
+		Bool bool `yaml:"bool" usage:"bool"`
+	} `yaml:",inline"`
+}
+
+func main() {
+	c := MyConfig{}
+
+	config := conf.NewConfig(&c)
+	err := config.ParseArguments("--inner.bool=true")
+	if err != nil {
+		panic(err)
+	}
+	println(config.HelpFlags())
+}
+```
+
 ## More options
 
 For more options, have a look into the [options.go](./options.go) file.

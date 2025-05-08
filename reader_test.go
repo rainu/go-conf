@@ -189,6 +189,13 @@ func Test_collectLines(t *testing.T) {
 				{path: []string{"raw-map", "[key with space]"}, value: "value"},
 			},
 		},
+		{
+			given: []string{"--array=v2", "--array=v1"},
+			expected: []line{
+				{path: []string{"array"}, value: "v2"},
+				{path: []string{"array"}, value: "v1"},
+			},
+		},
 	}
 
 	for i, tt := range tests {

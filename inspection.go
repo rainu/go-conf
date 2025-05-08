@@ -13,9 +13,9 @@ type fieldInfo struct {
 	Type         string
 }
 
-type fieldPath []*fieldPathElement
+type fieldPath []*fieldPathNode
 
-type fieldPathElement struct {
+type fieldPathNode struct {
 	key     string
 	isMap   bool
 	isSlice bool
@@ -28,16 +28,16 @@ type fieldInfos struct {
 }
 
 func (c *Config) collectInfos() fieldInfos {
-	properties := fieldInfos{
+	infos := fieldInfos{
 		options: c.options,
 	}
 
-	c.scan(reflect.TypeOf(c.dest), []*fieldPathElement{}, &properties.fi)
-	slices.SortFunc(properties.fi, func(a, b fieldInfo) int {
+	c.scan(reflect.TypeOf(c.dest), []*fieldPathNode{}, &infos.fi)
+	slices.SortFunc(infos.fi, func(a, b fieldInfo) int {
 		return strings.Compare(a.Path.key(c.options, "i"), b.Path.key(c.options, "i"))
 	})
 
-	return properties
+	return infos
 }
 
 func (c *Config) scan(t reflect.Type, parent fieldPath, infos *[]fieldInfo) {
@@ -61,12 +61,12 @@ func (c *Config) scan(t reflect.Type, parent fieldPath, infos *[]fieldInfo) {
 			continue
 		}
 
-		pc := fieldPathElement{}
+		node := fieldPathNode{}
 		subPath := slices.Clone(parent)
-		subPath = append(subPath, &pc)
+		subPath = append(subPath, &node)
 
-		pc.key = strings.Split(yamlTag, ",")[0]
-		pc.usage = c.getUsage(t, field)
+		node.key = strings.Split(yamlTag, ",")[0]
+		node.usage = c.getUsage(t, field)
 
 		shortTag := field.Tag.Get(c.options.shortTag)
 
@@ -84,12 +84,12 @@ func (c *Config) scan(t reflect.Type, parent fieldPath, infos *[]fieldInfo) {
 				if elemType.Kind() == reflect.Ptr {
 					elemType = elemType.Elem()
 				}
-				pc.isSlice = true
+				node.isSlice = true
 				c.scan(elemType, subPath, infos)
 			} else {
 				// for slices of primitives, we just add the fieldInfo
 				info := fieldInfo{
-					Path:  subPath,
+					Path:  subPath.purge(),
 					Short: shortTag,
 					Type:  "[]" + field.Type.Elem().Kind().String(),
 				}
@@ -102,12 +102,12 @@ func (c *Config) scan(t reflect.Type, parent fieldPath, infos *[]fieldInfo) {
 				if elemType.Kind() == reflect.Ptr {
 					elemType = elemType.Elem()
 				}
-				pc.isMap = true
+				node.isMap = true
 				c.scan(elemType, subPath, infos)
 			} else {
 				// for maps of primitives, we just add the fieldInfo
 				property := fieldInfo{
-					Path:  subPath,
+					Path:  subPath.purge(),
 					Short: shortTag,
 					Type:  "map[" + field.Type.Key().Kind().String() + "]" + field.Type.Elem().Kind().String(),
 				}
@@ -115,7 +115,7 @@ func (c *Config) scan(t reflect.Type, parent fieldPath, infos *[]fieldInfo) {
 			}
 		default:
 			property := fieldInfo{
-				Path:  subPath,
+				Path:  subPath.purge(),
 				Short: shortTag,
 				Type:  field.Type.Kind().String(),
 			}
@@ -150,10 +150,29 @@ func (p fieldPath) key(opts Options, sliceKey string) string {
 	return sb.String()
 }
 
+func (p fieldPath) purge() fieldPath {
+	//remove empty nodes
+	return slices.DeleteFunc(p, func(node *fieldPathNode) bool {
+		return node.key == ""
+	})
+}
+
 func (p fieldInfos) findByShort(key string) *fieldInfo {
-	for _, property := range p.fi {
-		if property.Short == key {
-			return &property
+	for _, info := range p.fi {
+		if info.Short == key {
+			return &info
+		}
+	}
+	return nil
+}
+
+func (p fieldInfos) findByPath(path []string) *fieldInfo {
+	joinedPath := strings.Join(path, string(p.options.keyDelimiter))
+	for _, info := range p.fi {
+		joinedKey := info.Path.key(p.options, "i")
+
+		if joinedKey == joinedPath {
+			return &info
 		}
 	}
 	return nil
