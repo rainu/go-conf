@@ -29,7 +29,7 @@ func main() {
 	c := MyConfig{}
 
 	config := conf.NewConfig(&c)
-	err := config.ParseArgs("--help")
+	err := config.ParseArguments("--help")
 	if err != nil {
 		panic(err)
 	}
@@ -57,7 +57,7 @@ func main() {
 	c := MyConfig{}
 
 	config := conf.NewConfig(&c)
-	err := config.ParseEnv("CFG_0=--help")
+	err := config.ParseEnvironment("CFG_0=--help")
 	if err != nil {
 		panic(err)
 	}
@@ -129,7 +129,7 @@ func main() {
 	c := MyConfig{}
 
 	config := conf.NewConfig(&c, conf.WithDefaults(Default))
-	err := config.ParseArgs()
+	err := config.ParseArguments()
 	if err != nil {
 		panic(err)
 	}
@@ -159,7 +159,7 @@ func main() {
 	c := MyConfig{}
 
 	config := conf.NewConfig(&c)
-	err := config.ParseArgs()
+	err := config.ParseArguments()
 	if err != nil {
 		panic(err)
 	}
@@ -253,7 +253,7 @@ func main() {
 	c := MyConfig{}
 
 	config := conf.NewConfig(&c)
-	err := config.ParseArgs("--inner.bool=true")
+	err := config.ParseArguments("--inner.bool=true")
 	if err != nil {
 		panic(err)
 	}
