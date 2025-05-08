@@ -34,6 +34,10 @@ type UsageProvider interface {
 	GetUsage(field string) string
 }
 
+type DefaultSetter interface {
+	SetDefaults()
+}
+
 func (c *Config) collectHelpProperties() Properties {
 	properties := Properties{
 		options: c.options,
@@ -143,9 +147,18 @@ func (c *Config) collect(t reflect.Type, parent path, properties *[]Property) {
 
 func (c *Config) getDefaultValue(parentType reflect.Type, field reflect.StructField) (any, bool) {
 	typeVal := reflect.New(parentType).Interface()
-	if c.options.defaultSetter[parentType] != nil {
-		c.options.defaultSetter[parentType](typeVal)
 
+	appliedDefaults := false
+	if setter, ok := typeVal.(DefaultSetter); ok {
+		setter.SetDefaults()
+		appliedDefaults = true
+	}
+	if setter, ok := c.options.defaultSetter[parentType]; ok {
+		setter(typeVal)
+		appliedDefaults = true
+	}
+
+	if appliedDefaults {
 		userDefinedDefaultValue := reflect.ValueOf(typeVal).Elem().FieldByName(field.Name).Interface()
 
 		typeVal = reflect.New(parentType).Interface()

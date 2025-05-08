@@ -20,6 +20,18 @@ type defaultHelp struct {
 	String string `yaml:"string"`
 }
 
+func (d *defaultHelp) SetDefaults() {
+	d.String = "Default value"
+}
+
+type defaultWithoutPointerHelp struct {
+	String string `yaml:"string"`
+}
+
+func (d defaultWithoutPointerHelp) SetDefaults() {
+	d.String = "Default value"
+}
+
 func TestConfig_CollectHelpProperties(t *testing.T) {
 	testConfig_CollectHelpProperties(t, &struct {
 		String string `yaml:"string" short:"s" usage:"help"`
@@ -137,8 +149,21 @@ func TestConfig_CollectHelpProperties(t *testing.T) {
 		{Path: []*pathChild{
 			{key: "string"},
 		}, Type: "string", DefaultValue: "Default value"},
+	})
+
+	// will not work, but will also not panic
+	testConfig_CollectHelpProperties(t, &defaultWithoutPointerHelp{}, []Property{
+		{Path: []*pathChild{
+			{key: "string"},
+		}, Type: "string"},
+	})
+
+	testConfig_CollectHelpProperties(t, &defaultHelp{}, []Property{
+		{Path: []*pathChild{
+			{key: "string"},
+		}, Type: "string", DefaultValue: "Default value via external function"},
 	}, WithDefaults(func(d *defaultHelp) {
-		d.String = "Default value"
+		d.String = "Default value via external function"
 	}))
 }
 

@@ -17,8 +17,16 @@ type defaultInner1 struct {
 	String string `yaml:"string"`
 }
 
+func (d defaultInner1) SetDefaults() {
+	d.String = "Should not be called"
+}
+
 type defaultInner2 struct {
 	String string `yaml:"string"`
+}
+
+func (d *defaultInner2) SetDefaults() {
+	d.String = "defaultInner2"
 }
 
 func TestConfig_ApplyDefaults(t *testing.T) {
@@ -38,12 +46,6 @@ func TestConfig_ApplyDefaults(t *testing.T) {
 				callCount++
 			}
 		}),
-		WithDefaults(func(d *defaultInner2) {
-			d.String = "defaultInner2"
-			if &c.Inner.Inner == d {
-				callCount++
-			}
-		}),
 	)
 	assert.True(t, toTest.isFirstParse)
 
@@ -58,9 +60,22 @@ func TestConfig_ApplyDefaults(t *testing.T) {
 		String: "defaultS1",
 	}, *c)
 	assert.False(t, toTest.isFirstParse)
-	assert.Equal(t, 3, callCount, "Default values should be applied only once (first parse action)")
+	assert.Equal(t, 2, callCount, "Default values should be applied only once (first parse action)")
 
 	toTest.ParseArgs()
 	assert.False(t, toTest.isFirstParse)
-	assert.Equal(t, 3, callCount, "Default values should be applied only once (first parse action)")
+	assert.Equal(t, 2, callCount, "Default values should be applied only once (first parse action)")
+}
+
+func TestConfig_ApplyDefaults_WithoutPointerReceiver(t *testing.T) {
+	c := &defaultInner1{}
+
+	toTest := NewConfig(c)
+	assert.True(t, toTest.isFirstParse)
+
+	toTest.ParseArgs()
+	assert.Equal(t, defaultInner1{
+		Inner: defaultInner2{"defaultInner2"},
+	}, *c)
+	assert.False(t, toTest.isFirstParse)
 }

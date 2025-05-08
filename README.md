@@ -106,7 +106,9 @@ func main() {
 
 ## Define default values
 
-For applying default values you have to define a function which will be called every time a struct will be created.
+For applying default values there are two ways to do this:
+
+### Register a function
 
 ```go
 package main
@@ -127,6 +129,36 @@ func main() {
 	c := MyConfig{}
 
 	config := conf.NewConfig(&c, conf.WithDefaults(Default))
+	err := config.ParseArgs()
+	if err != nil {
+		panic(err)
+	}
+	println(c.String) // should be "default"
+}
+```
+
+### Define a **pointer receiver** function
+
+```go
+package main
+
+import (
+	"github.com/rainu/go-conf"
+)
+
+type MyConfig struct {
+	String string `yaml:"string" short:"s" usage:"String value"`
+}
+
+// implements the interface >conf.DefaultSetter<
+func (m *MyConfig) SetDefaults() {
+	m.String = "default"
+}
+
+func main() {
+	c := MyConfig{}
+
+	config := conf.NewConfig(&c)
 	err := config.ParseArgs()
 	if err != nil {
 		panic(err)

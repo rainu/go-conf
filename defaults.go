@@ -13,9 +13,12 @@ func (c *Config) ApplyDefaults() {
 }
 
 func (c *Config) applyDefaultsRecursive(t reflect.Type, v reflect.Value) {
-	if setter := c.options.defaultSetter[t]; setter != nil {
-		addr := v.Addr().Interface()
-		if addr != nil {
+	addr := v.Addr().Interface()
+	if addr != nil {
+		if setter, ok := addr.(DefaultSetter); ok {
+			setter.SetDefaults()
+		}
+		if setter := c.options.defaultSetter[t]; setter != nil {
 			setter(addr)
 		}
 	}
