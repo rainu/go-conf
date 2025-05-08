@@ -166,12 +166,20 @@ func TestConfig_Parse_WithDefaults(t *testing.T) {
 func TestConfig_HelpFlags(t *testing.T) {
 	conf := testConfig{}
 
-	toTest := NewConfig(&conf, WithDefaults(SetDefaults))
+	toTest := NewConfig(&conf,
+		WithDefaults(SetDefaults),
+		WithUsage(func(t *testConfig, f string) string {
+			if f == "Bool" {
+				return "Bool usage"
+			}
+			return ""
+		}),
+	)
 
 	expected := "        --array.[i].key     string                The key of the entry                    \n"
 	expected += "        --array.[i].value   string                The value of the entry                  \n"
 	expected += "                                                  Default: DEFAULT                        \n"
-	expected += "        --bool              bool                                                          \n"
+	expected += "        --bool              bool                  Bool usage                              \n"
 	expected += "        --bool2             bool                                                          \n"
 	expected += "        --entry.key         string                The base entry: The key of the entry    \n"
 	expected += "        --entry.value       string                The base entry: The value of the entry  \n"

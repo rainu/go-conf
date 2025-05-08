@@ -4,11 +4,28 @@ import (
 	"fmt"
 	"github.com/olekukonko/tablewriter"
 	"io"
+	"reflect"
 	"strings"
 )
 
 type UsageProvider interface {
 	GetUsage(field string) string
+}
+
+func (c *Config) getUsage(t reflect.Type, field reflect.StructField) (usage string) {
+	valAsInterface := reflect.New(t).Interface()
+	if provider, ok := valAsInterface.(UsageProvider); ok {
+		usage = provider.GetUsage(field.Name)
+	}
+	if provide, ok := c.options.usageProvider[t]; ok {
+		usage = provide(valAsInterface, field.Name)
+	}
+
+	if usage == "" {
+		usage = field.Tag.Get(c.options.usageTag)
+	}
+
+	return
 }
 
 func (p fieldPath) Usage() string {

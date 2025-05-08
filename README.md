@@ -118,7 +118,7 @@ import (
 )
 
 type MyConfig struct {
-	String string `yaml:"string" short:"s" usage:"String value"`
+	String string `yaml:"string"`
 }
 
 func Default(m *MyConfig) {
@@ -147,7 +147,7 @@ import (
 )
 
 type MyConfig struct {
-	String string `yaml:"string" short:"s" usage:"String value"`
+	String string `yaml:"string"`
 }
 
 // implements the interface >conf.DefaultSetter<
@@ -167,9 +167,19 @@ func main() {
 }
 ```
 
-## Define dynamic usage
+## Define usage
 
-Sometimes you want to define a dynamic usage for a flag. Therefore, your struct must declare a function which is responsible for getting the usage.
+There are three ways to define the usage
+
+### Usage tag
+
+```go
+type MyConfig struct {
+	String string `yaml:"string" usage:"Put a string here"`
+}
+```
+
+### Register a function
 
 ```go
 package main
@@ -179,14 +189,41 @@ import (
 )
 
 type MyConfig struct {
-	String string `yaml:"string" short:"s"`
+	String string `yaml:"string"`
 }
 
-func (c *MyConfig) GetUsage(field string) string {
-	if field == "String" {
-		return "Dynamic help for string"
-	}
-	return ""
+func main() {
+	c := MyConfig{}
+
+	config := conf.NewConfig(&c, conf.WithUsage(func(t *MyConfig, f string) string {
+        if f == "String" {
+            return "Put a string here"
+        }
+		return ""
+	}))
+	println(config.HelpFlags())
+}
+```
+
+### Define a **pointer receiver** function
+
+```go
+package main
+
+import (
+	"github.com/rainu/go-conf"
+)
+
+type MyConfig struct {
+	String string `yaml:"string"`
+}
+
+// implements the interface >conf.UsageProvider<
+func (m *MyConfig) GetUsage(field string) string {
+    if field == "String" {
+        return "Put a string here"
+    }
+    return ""
 }
 
 func main() {

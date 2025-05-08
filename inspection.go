@@ -66,13 +66,7 @@ func (c *Config) scan(t reflect.Type, parent fieldPath, infos *[]fieldInfo) {
 		subPath = append(subPath, &pc)
 
 		pc.key = strings.Split(yamlTag, ",")[0]
-		pc.usage = field.Tag.Get(c.options.usageTag)
-
-		if pc.usage == "" {
-			if provider, ok := reflect.New(t).Interface().(UsageProvider); ok {
-				pc.usage = provider.GetUsage(field.Name)
-			}
-		}
+		pc.usage = c.getUsage(t, field)
 
 		shortTag := field.Tag.Get(c.options.shortTag)
 

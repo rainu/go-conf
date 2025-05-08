@@ -19,6 +19,8 @@ type Options struct {
 	defaultSetter     map[reflect.Type]func(any)
 	autoApplyDefaults bool
 
+	usageProvider map[reflect.Type]func(any, string) string
+
 	decodeOptions []yaml.DecodeOption
 }
 
@@ -116,5 +118,17 @@ func WithDefaults[T any](defaultSetter func(*T)) Option {
 			defaultSetter(dst)
 			return yaml.Unmarshal(bytes, dst)
 		}))
+	}
+}
+
+// WithUsage register a function which is responsible for getting the usage for the given type and field.
+func WithUsage[T any](getUsage func(*T, string) string) Option {
+	return func(o *Options) {
+		if o.usageProvider == nil {
+			o.usageProvider = make(map[reflect.Type]func(any, string) string)
+		}
+		o.usageProvider[reflect.TypeOf((*T)(nil)).Elem()] = func(v any, fieldName string) string {
+			return getUsage(v.(*T), fieldName)
+		}
 	}
 }
