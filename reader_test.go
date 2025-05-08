@@ -106,7 +106,7 @@ func TestReader_Short(t *testing.T) {
 		"-b=true",
 		"-B",
 	}
-	props := NewConfig(&testStruct).collectHelpProperties()
+	props := NewConfig(&testStruct).collectInfos()
 
 	expected := `
 "bool": true

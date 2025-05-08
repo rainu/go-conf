@@ -2,6 +2,10 @@ package conf
 
 import "reflect"
 
+type DefaultSetter interface {
+	SetDefaults()
+}
+
 // ApplyDefaults applies default values (execute all DefaultSetters) to the fields of the destination struct.
 func (c *Config) ApplyDefaults() {
 	v := reflect.ValueOf(c.dest)
@@ -46,4 +50,31 @@ func (c *Config) applyDefaultsRecursive(t reflect.Type, v reflect.Value) {
 			// ignore other types
 		}
 	}
+}
+
+func (c *Config) getDefaultValue(parentType reflect.Type, field reflect.StructField) (any, bool) {
+	typeVal := reflect.New(parentType).Interface()
+
+	appliedDefaults := false
+	if setter, ok := typeVal.(DefaultSetter); ok {
+		setter.SetDefaults()
+		appliedDefaults = true
+	}
+	if setter, ok := c.options.defaultSetter[parentType]; ok {
+		setter(typeVal)
+		appliedDefaults = true
+	}
+
+	if appliedDefaults {
+		userDefinedDefaultValue := reflect.ValueOf(typeVal).Elem().FieldByName(field.Name).Interface()
+
+		typeVal = reflect.New(parentType).Interface()
+		goDefaultValue := reflect.ValueOf(typeVal).Elem().FieldByName(field.Name).Interface()
+
+		if userDefinedDefaultValue != goDefaultValue {
+			return userDefinedDefaultValue, true
+		}
+	}
+
+	return nil, false
 }

@@ -50,7 +50,7 @@ func (c *Config) ParseOsArgs() error {
 
 // ParseArgs parses the given arguments and sets the values in the destination struct.
 func (c *Config) ParseArgs(args ...string) error {
-	properties := c.collectHelpProperties()
+	properties := c.collectInfos()
 	reader := newReader(args, &properties, c.options)
 	defer reader.Close()
 
@@ -92,10 +92,10 @@ func (c *Config) ParseEnv(env ...string) error {
 
 // HelpFlags returns the help text for the flags in a table format.
 func (c *Config) HelpFlags() string {
-	return c.collectHelpProperties().HelpFlags()
+	return c.collectInfos().HelpFlags()
 }
 
 // HelpYaml returns the help text for the flags in a YAML format.
 func (c *Config) HelpYaml() string {
-	return c.collectHelpProperties().HelpYaml()
+	return c.collectInfos().HelpYaml()
 }

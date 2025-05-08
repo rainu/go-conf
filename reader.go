@@ -22,14 +22,14 @@ type Reader struct {
 	reKeyValShortFlag *regexp.Regexp
 
 	options    Options
-	properties *Properties
+	fieldInfos *fieldInfos
 	args       []string
 }
 
-func newReader(args []string, dst *Properties, options Options) *Reader {
+func newReader(args []string, dst *fieldInfos, options Options) *Reader {
 	r := &Reader{
 		args:       args,
-		properties: dst,
+		fieldInfos: dst,
 		options:    options,
 	}
 	r.r, r.w = io.Pipe()
@@ -162,8 +162,8 @@ func (r *Reader) tryLongFlag(line string, key, value *string) bool {
 }
 
 func (r *Reader) tryShort(line string, key, value *string) bool {
-	// for short variant we need the properties
-	if r.properties == nil {
+	// for short variant we need the fieldInfos
+	if r.fieldInfos == nil {
 		return false
 	}
 
@@ -171,8 +171,8 @@ func (r *Reader) tryShort(line string, key, value *string) bool {
 	if len(result) == 1 {
 		k := result[0][1]
 
-		// search for property with given short key
-		corProperty := r.properties.findByShort(k)
+		// search for fieldInfo with given short key
+		corProperty := r.fieldInfos.findByShort(k)
 		if corProperty == nil {
 			return false
 		}
@@ -185,8 +185,8 @@ func (r *Reader) tryShort(line string, key, value *string) bool {
 }
 
 func (r *Reader) tryShortFlag(line string, key, value *string) bool {
-	// for short variant we need the properties
-	if r.properties == nil {
+	// for short variant we need the fieldInfos
+	if r.fieldInfos == nil {
 		return false
 	}
 
@@ -194,8 +194,8 @@ func (r *Reader) tryShortFlag(line string, key, value *string) bool {
 	if len(result) == 1 {
 		k := result[0][1]
 
-		// search for property with given short key
-		corProperty := r.properties.findByShort(k)
+		// search for fieldInfo with given short key
+		corProperty := r.fieldInfos.findByShort(k)
 		if corProperty == nil {
 			return false
 		}
