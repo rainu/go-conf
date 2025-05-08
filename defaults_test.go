@@ -49,7 +49,7 @@ func TestConfig_ApplyDefaults(t *testing.T) {
 	)
 	assert.True(t, toTest.isFirstParse)
 
-	toTest.ParseArgs()
+	toTest.ParseArguments()
 	assert.Equal(t, defaultS1{
 		Inner: defaultInner1{
 			Inner: defaultInner2{
@@ -62,7 +62,7 @@ func TestConfig_ApplyDefaults(t *testing.T) {
 	assert.False(t, toTest.isFirstParse)
 	assert.Equal(t, 2, callCount, "Default values should be applied only once (first parse action)")
 
-	toTest.ParseArgs()
+	toTest.ParseArguments()
 	assert.False(t, toTest.isFirstParse)
 	assert.Equal(t, 2, callCount, "Default values should be applied only once (first parse action)")
 }
@@ -73,7 +73,7 @@ func TestConfig_ApplyDefaults_WithoutPointerReceiver(t *testing.T) {
 	toTest := NewConfig(c)
 	assert.True(t, toTest.isFirstParse)
 
-	toTest.ParseArgs()
+	toTest.ParseArguments()
 	assert.Equal(t, defaultInner1{
 		Inner: defaultInner2{"defaultInner2"},
 	}, *c)
