@@ -118,8 +118,8 @@ func (r *Reader) collectLines() []line {
 		key := r.args[i]
 		var value string
 
-		if !r.tryShort(key, &key, &value) {
-			if !r.tryShortFlag(key, &key, &value) {
+		if !r.tryShort(key, &key, &value, i) {
+			if !r.tryShortFlag(key, &key, &value, i) {
 				if !r.tryLong(key, &key, &value) {
 					if !r.tryLongFlag(key, &key, &value) {
 						continue
@@ -181,7 +181,7 @@ func (r *Reader) tryLongFlag(line string, key, value *string) bool {
 	return false
 }
 
-func (r *Reader) tryShort(line string, key, value *string) bool {
+func (r *Reader) tryShort(line string, key, value *string, i int) bool {
 	// for short variant we need the fieldInfos
 	if r.fieldInfos == nil {
 		return false
@@ -198,13 +198,13 @@ func (r *Reader) tryShort(line string, key, value *string) bool {
 		}
 
 		// convert to long-variant and delegate to the long-variant
-		line = r.options.prefixLong + corProperty.Path.key(r.options, "0") + string(r.options.assignSign) + result[0][2]
+		line = r.options.prefixLong + corProperty.Path.key(r.options, fmt.Sprintf("%d", i)) + string(r.options.assignSign) + result[0][2]
 		return r.tryLong(line, key, value)
 	}
 	return false
 }
 
-func (r *Reader) tryShortFlag(line string, key, value *string) bool {
+func (r *Reader) tryShortFlag(line string, key, value *string, i int) bool {
 	// for short variant we need the fieldInfos
 	if r.fieldInfos == nil {
 		return false
@@ -221,7 +221,7 @@ func (r *Reader) tryShortFlag(line string, key, value *string) bool {
 		}
 
 		// convert to long-variant and delegate to the long-variant
-		line = r.options.prefixLong + corProperty.Path.key(r.options, "0")
+		line = r.options.prefixLong + corProperty.Path.key(r.options, fmt.Sprintf("%d", i))
 		return r.tryLongFlag(line, key, value)
 	}
 	return false

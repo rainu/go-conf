@@ -59,11 +59,11 @@ func TestConfig_collectInfos(t *testing.T) {
 		Int32  []int32        `yaml:"i32"`
 		Int    []int64        `yaml:"i64"`
 	}{}, []fieldInfo{
-		{Path: []*fieldPathNode{{key: "cs"}}, Type: "[]string"},
-		{Path: []*fieldPathNode{{key: "f"}}, Type: "[]float64"},
-		{Path: []*fieldPathNode{{key: "i32"}}, Type: "[]int32"},
-		{Path: []*fieldPathNode{{key: "i64"}}, Type: "[]int64"},
-		{Path: []*fieldPathNode{{key: "s"}}, Type: "[]string"},
+		{Path: []*fieldPathNode{{key: "cs", isSlice: true}}, Type: "[]string"},
+		{Path: []*fieldPathNode{{key: "f", isSlice: true}}, Type: "[]float64"},
+		{Path: []*fieldPathNode{{key: "i32", isSlice: true}}, Type: "[]int32"},
+		{Path: []*fieldPathNode{{key: "i64", isSlice: true}}, Type: "[]int64"},
+		{Path: []*fieldPathNode{{key: "s", isSlice: true}}, Type: "[]string"},
 	})
 
 	testConfig_collectInfos(t, &struct {
@@ -73,11 +73,11 @@ func TestConfig_collectInfos(t *testing.T) {
 		Int32  map[string]int32        `yaml:"i32"`
 		Int    map[string]int64        `yaml:"i64"`
 	}{}, []fieldInfo{
-		{Path: []*fieldPathNode{{key: "cs"}}, Type: "map[string]string"},
-		{Path: []*fieldPathNode{{key: "f"}}, Type: "map[string]float64"},
-		{Path: []*fieldPathNode{{key: "i32"}}, Type: "map[string]int32"},
-		{Path: []*fieldPathNode{{key: "i64"}}, Type: "map[string]int64"},
-		{Path: []*fieldPathNode{{key: "s"}}, Type: "map[string]string"},
+		{Path: []*fieldPathNode{{key: "cs", isMap: true}}, Type: "map[string]string"},
+		{Path: []*fieldPathNode{{key: "f", isMap: true}}, Type: "map[string]float64"},
+		{Path: []*fieldPathNode{{key: "i32", isMap: true}}, Type: "map[string]int32"},
+		{Path: []*fieldPathNode{{key: "i64", isMap: true}}, Type: "map[string]int64"},
+		{Path: []*fieldPathNode{{key: "s", isMap: true}}, Type: "map[string]string"},
 	})
 
 	testConfig_collectInfos(t, &struct {
@@ -87,11 +87,11 @@ func TestConfig_collectInfos(t *testing.T) {
 		Int32  map[int]int32        `yaml:"i32"`
 		Int    map[int]int64        `yaml:"i64"`
 	}{}, []fieldInfo{
-		{Path: []*fieldPathNode{{key: "cs"}}, Type: "map[int]string"},
-		{Path: []*fieldPathNode{{key: "f"}}, Type: "map[int]float64"},
-		{Path: []*fieldPathNode{{key: "i32"}}, Type: "map[int]int32"},
-		{Path: []*fieldPathNode{{key: "i64"}}, Type: "map[int]int64"},
-		{Path: []*fieldPathNode{{key: "s"}}, Type: "map[int]string"},
+		{Path: []*fieldPathNode{{key: "cs", isMap: true}}, Type: "map[int]string"},
+		{Path: []*fieldPathNode{{key: "f", isMap: true}}, Type: "map[int]float64"},
+		{Path: []*fieldPathNode{{key: "i32", isMap: true}}, Type: "map[int]int32"},
+		{Path: []*fieldPathNode{{key: "i64", isMap: true}}, Type: "map[int]int64"},
+		{Path: []*fieldPathNode{{key: "s", isMap: true}}, Type: "map[int]string"},
 	})
 
 	testConfig_collectInfos(t, &struct {
@@ -164,6 +164,53 @@ func TestConfig_collectInfos(t *testing.T) {
 	}, WithDefaults(func(d *defaultHelp) {
 		d.String = "Default value via external function"
 	}))
+
+	testConfig_collectInfos(t, &struct {
+		Map map[string]struct {
+			Value string `yaml:"value" short:"v"`
+		} `yaml:"map"`
+	}{}, []fieldInfo{
+		{Path: []*fieldPathNode{
+			{key: "map", isMap: true},
+			{key: "value"},
+		}, Type: "string"},
+	})
+
+	testConfig_collectInfos(t, &struct {
+		Array []struct {
+			Value string `yaml:"value" short:"v"`
+		} `yaml:"array"`
+	}{}, []fieldInfo{
+		{Path: []*fieldPathNode{
+			{key: "array", isSlice: true},
+			{key: "value"},
+		}, Type: "string"},
+	})
+
+	testConfig_collectInfos(t, &struct {
+		Entry struct {
+			Values []string `yaml:"value" short:"v"`
+		} `yaml:"entry"`
+	}{}, []fieldInfo{
+		{Path: []*fieldPathNode{
+			{key: "entry"},
+			{key: "value", isSlice: true},
+		}, Type: "[]string", Short: "v"},
+	})
+
+	testConfig_collectInfos(t, &struct {
+		Array []struct {
+			Array []struct {
+				Value string `yaml:"value" short:"v"`
+			} `yaml:"array"`
+		} `yaml:"array"`
+	}{}, []fieldInfo{
+		{Path: []*fieldPathNode{
+			{key: "array", isSlice: true},
+			{key: "array", isSlice: true},
+			{key: "value"},
+		}, Type: "string"},
+	})
 }
 
 func testConfig_collectInfos[T any](t *testing.T, dst *T, expected []fieldInfo, opts ...Option) {

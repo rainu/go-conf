@@ -19,7 +19,7 @@ type testConfig struct {
 }
 
 type testEntry struct {
-	Key   string `yaml:"key" usage:"The key of the entry"`
+	Key   string `yaml:"key" usage:"The key of the entry" short:"k"`
 	Value string `yaml:"value"`
 }
 
@@ -242,7 +242,7 @@ func TestConfig_HelpFlags(t *testing.T) {
 	expected += "                                                 Default: DEFAULT                        \n"
 	expected += "        --bool             bool                  Bool usage                              \n"
 	expected += "        --bool2            bool                                                          \n"
-	expected += "        --entry.key        string                The base entry: The key of the entry    \n"
+	expected += "  -k,   --entry.key        string                The base entry: The key of the entry    \n"
 	expected += "        --entry.value      string                The base entry: The value of the entry  \n"
 	expected += "                                                 Default: DEFAULT                        \n"
 	expected += "        --map.[k].key      string                The key of the entry                    \n"
@@ -274,9 +274,11 @@ func TestConfig_HelpYaml(t *testing.T) {
   "k":
     "key": string # The key of the entry
     "value": string # The value of the entry
-"raw-map": map[string]interface
+"raw-map":
+  "k": map[string]interface
 "string": string # This is a string
-"string-array": []string
+"string-array":
+  - []string
 `
 
 	assert.Equal(t, strings.TrimSpace(expected), strings.TrimSpace(toTest.HelpYaml()))
@@ -318,8 +320,10 @@ func TestConfig_ShadowStructs(t *testing.T) {
 	assert.Equal(t, eArgs, config.HelpFlags())
 
 	eYaml := `
-"array": []string # array
-"map": map[string]string # map
+"array":
+  - []string # array
+"map":
+  "k": map[string]string # map
 "string": string
 `
 	assert.Equal(t, strings.TrimSpace(eYaml), strings.TrimSpace(config.HelpYaml()))

@@ -13,16 +13,20 @@ func TestFieldInfos_HelpFlags(t *testing.T) {
 			{Path: fieldPath{{key: "z-key", usage: "help for key3"}}, Type: "int32"},
 			{Path: fieldPath{{key: "b-key", usage: "help for key2"}}, Type: "int64"},
 			{Path: fieldPath{{key: "n"}, {key: "key", usage: "help: ", isSlice: true}, {key: "value", usage: "value"}}, Type: "float64"},
+			{Path: fieldPath{{key: "p"}, {key: "slice", usage: "help: ", isSlice: true}}, Type: "[]string"},
 			{Path: fieldPath{{key: "m"}, {key: "key", usage: "help: ", isMap: true}, {key: "value", usage: "value"}}, Type: "float32"},
+			{Path: fieldPath{{key: "p"}, {key: "map", usage: "help: ", isMap: true}}, Type: "map[]string"},
 		},
 		options: newDefaultOptions(),
 	}
 
-	expected := "  -k,   --a-key            string   help for key1  \n"
-	expected += "        --z-key            int32    help for key3  \n"
-	expected += "        --b-key            int64    help for key2  \n"
-	expected += "        --n.key.[i].value  float64  help: value    \n"
-	expected += "        --m.key.[k].value  float32  help: value    \n"
+	expected := "  -k,   --a-key            string       help for key1  \n"
+	expected += "        --z-key            int32        help for key3  \n"
+	expected += "        --b-key            int64        help for key2  \n"
+	expected += "        --n.key.[i].value  float64      help: value    \n"
+	expected += "        --p.slice          []string     help:          \n"
+	expected += "        --m.key.[k].value  float32      help: value    \n"
+	expected += "        --p.map.[k]        map[]string  help:          \n"
 
 	assert.Equal(t, expected, infos.HelpFlags())
 }

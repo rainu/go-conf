@@ -37,6 +37,35 @@ func (c *Config) collectInfos() fieldInfos {
 		return strings.Compare(a.Path.key(c.options, "i"), b.Path.key(c.options, "i"))
 	})
 
+	//ignore short-hand for ...
+	for i := range infos.fi {
+		if infos.fi[i].Short == "" {
+			continue
+		}
+
+		// ... nodes which are in maps
+		isMap := slices.ContainsFunc(infos.fi[i].Path, func(node *fieldPathNode) bool {
+			return node.isMap
+		})
+		if isMap {
+			infos.fi[i].Short = ""
+			continue
+		}
+
+		// ... nodes which are >in< slices
+		isSlice := slices.ContainsFunc(infos.fi[i].Path, func(node *fieldPathNode) bool {
+			return node.isSlice
+		})
+		if isSlice {
+			// only allowed if the slice is the last node
+			if infos.fi[i].Path[len(infos.fi[i].Path)-1].isSlice {
+				continue
+			}
+			infos.fi[i].Short = ""
+			continue
+		}
+	}
+
 	return infos
 }
 
@@ -78,13 +107,13 @@ func (c *Config) scan(t reflect.Type, parent fieldPath, infos *[]fieldInfo) {
 				c.scan(field.Type.Elem(), subPath, infos)
 			}
 		case reflect.Slice, reflect.Array:
+			node.isSlice = true
 			if field.Type.Elem().Kind() == reflect.Struct ||
 				(field.Type.Elem().Kind() == reflect.Ptr && field.Type.Elem().Elem().Kind() == reflect.Struct) {
 				elemType := field.Type.Elem()
 				if elemType.Kind() == reflect.Ptr {
 					elemType = elemType.Elem()
 				}
-				node.isSlice = true
 				c.scan(elemType, subPath, infos)
 			} else {
 				// for slices of primitives, we just add the fieldInfo
@@ -96,13 +125,13 @@ func (c *Config) scan(t reflect.Type, parent fieldPath, infos *[]fieldInfo) {
 				*infos = append(*infos, info)
 			}
 		case reflect.Map:
+			node.isMap = true
 			if field.Type.Elem().Kind() == reflect.Struct ||
 				(field.Type.Elem().Kind() == reflect.Ptr && field.Type.Elem().Elem().Kind() == reflect.Struct) {
 				elemType := field.Type.Elem()
 				if elemType.Kind() == reflect.Ptr {
 					elemType = elemType.Elem()
 				}
-				node.isMap = true
 				c.scan(elemType, subPath, infos)
 			} else {
 				// for maps of primitives, we just add the fieldInfo
@@ -169,7 +198,11 @@ func (p fieldInfos) findByShort(key string) *fieldInfo {
 func (p fieldInfos) findByPath(path []string) *fieldInfo {
 	joinedPath := strings.Join(path, string(p.options.keyDelimiter))
 	for _, info := range p.fi {
-		joinedKey := info.Path.key(p.options, "i")
+		keyNodes := make([]string, len(info.Path))
+		for i, node := range info.Path {
+			keyNodes[i] = node.key
+		}
+		joinedKey := strings.Join(keyNodes, string(p.options.keyDelimiter))
 
 		if joinedKey == joinedPath {
 			return &info

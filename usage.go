@@ -54,8 +54,9 @@ func (p fieldInfos) HelpFlags() string {
 			short += ", "
 		}
 		long := p.options.prefixLong + property.Path.key(p.options, "i")
-		if strings.HasPrefix(property.Type, "map[") {
-			long += ".[k]"
+		if strings.HasPrefix(property.Type, "[]") {
+			// we can dismiss the slice key in case there is a slice of primitives
+			long = strings.TrimSuffix(long, ".[i]")
 		}
 
 		table.Append([]string{
