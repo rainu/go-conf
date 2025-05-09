@@ -28,17 +28,17 @@ func (c *Config) getUsage(t reflect.Type, field reflect.StructField) (usage stri
 	return
 }
 
-func (p fieldPath) Usage() string {
+func (f fieldPath) Usage() string {
 	var sb strings.Builder
 
-	for _, pc := range p {
+	for _, pc := range f {
 		sb.WriteString(pc.usage)
 	}
 
 	return sb.String()
 }
 
-func (p fieldInfos) HelpFlags() string {
+func (f *fieldInfos) HelpFlags() string {
 	var sb strings.Builder
 
 	table := tablewriter.NewWriter(&sb)
@@ -47,14 +47,14 @@ func (p fieldInfos) HelpFlags() string {
 	table.SetColumnSeparator("")
 	table.SetAutoWrapText(false)
 
-	for _, property := range p.fi {
-		short := property.Short
+	for _, property := range f.fi {
+		short := property.short
 		if short != "" {
-			short = p.options.prefixShort + short
+			short = f.options.prefixShort + short
 			short += ", "
 		}
-		long := p.options.prefixLong + property.Path.key(p.options, "i")
-		if strings.HasPrefix(property.Type, "[]") {
+		long := f.options.prefixLong + property.path.key(f.options, "i", "k")
+		if strings.HasPrefix(property.sType, "[]") {
 			// we can dismiss the slice key in case there is a slice of primitives
 			long = strings.TrimSuffix(long, ".[i]")
 		}
@@ -63,16 +63,16 @@ func (p fieldInfos) HelpFlags() string {
 		table.Append([]string{
 			short,
 			long,
-			property.Type,
-			property.Path.Usage(),
+			property.sType,
+			property.path.Usage(),
 		})
 
-		if property.DefaultValue != nil {
+		if property.defaultValue != nil {
 			table.Append([]string{
 				"",
 				"",
 				"",
-				fmt.Sprintf("Default: %v", property.DefaultValue),
+				fmt.Sprintf("Default: %v", property.defaultValue),
 			})
 		}
 	}
@@ -81,23 +81,23 @@ func (p fieldInfos) HelpFlags() string {
 	return sb.String()
 }
 
-func (p fieldInfos) HelpYaml() string {
-	fakeArgs := make([]string, 0, len(p.fi))
+func (f *fieldInfos) HelpYaml() string {
+	fakeArgs := make([]string, 0, len(f.fi))
 
-	for _, property := range p.fi {
-		arg := p.options.prefixLong
-		arg += property.Path.key(p.options, "0")
-		arg += string(p.options.assignSign)
-		arg += property.Type
+	for _, property := range f.fi {
+		arg := f.options.prefixLong
+		arg += property.path.key(f.options, "0", "k")
+		arg += string(f.options.assignSign)
+		arg += property.sType
 
-		help := property.Path.Usage()
+		help := property.path.Usage()
 		if help != "" {
 			arg += " # " + help
 		}
 		fakeArgs = append(fakeArgs, arg)
 	}
 
-	r := newReader(fakeArgs, nil, p.options)
+	r := newReaderWithoutSort(fakeArgs, nil, f.options)
 	defer r.Close()
 
 	c, _ := io.ReadAll(r)

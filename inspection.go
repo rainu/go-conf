@@ -6,11 +6,25 @@ import (
 	"strings"
 )
 
+type FieldInfo interface {
+	// Path returns the path to the field in the destination struct.
+	Path() string
+
+	// Field returns the corresponding field in the destination struct.
+	Field() reflect.StructField
+}
+
+type FieldInfos interface {
+	// Infos returns a list of all relevant fields which are defined in the destination struct.
+	Infos() []FieldInfo
+}
+
 type fieldInfo struct {
-	Path         fieldPath
-	Short        string
-	DefaultValue any
-	Type         string
+	path         fieldPath
+	short        string
+	defaultValue any
+	sType        string
+	field        reflect.StructField
 }
 
 type fieldPath []*fieldPathNode
@@ -27,46 +41,48 @@ type fieldInfos struct {
 	options Options
 }
 
-func (c *Config) collectInfos() fieldInfos {
+// CollectInfos returns a list of all fields which are defined in the destination struct.
+func (c *Config) CollectInfos() FieldInfos {
+	return c.collectInfos()
+}
+
+func (c *Config) collectInfos() *fieldInfos {
 	infos := fieldInfos{
 		options: c.options,
 	}
 
 	c.scan(reflect.TypeOf(c.dest), []*fieldPathNode{}, &infos.fi)
-	slices.SortFunc(infos.fi, func(a, b fieldInfo) int {
-		return strings.Compare(a.Path.key(c.options, "i"), b.Path.key(c.options, "i"))
-	})
 
 	//ignore short-hand for ...
 	for i := range infos.fi {
-		if infos.fi[i].Short == "" {
+		if infos.fi[i].short == "" {
 			continue
 		}
 
 		// ... nodes which are in maps
-		isMap := slices.ContainsFunc(infos.fi[i].Path, func(node *fieldPathNode) bool {
+		isMap := slices.ContainsFunc(infos.fi[i].path, func(node *fieldPathNode) bool {
 			return node.isMap
 		})
 		if isMap {
-			infos.fi[i].Short = ""
+			infos.fi[i].short = ""
 			continue
 		}
 
 		// ... nodes which are >in< slices
-		isSlice := slices.ContainsFunc(infos.fi[i].Path, func(node *fieldPathNode) bool {
+		isSlice := slices.ContainsFunc(infos.fi[i].path, func(node *fieldPathNode) bool {
 			return node.isSlice
 		})
 		if isSlice {
 			// only allowed if the slice is the last node
-			if infos.fi[i].Path[len(infos.fi[i].Path)-1].isSlice {
+			if infos.fi[i].path[len(infos.fi[i].path)-1].isSlice {
 				continue
 			}
-			infos.fi[i].Short = ""
+			infos.fi[i].short = ""
 			continue
 		}
 	}
 
-	return infos
+	return &infos
 }
 
 func (c *Config) scan(t reflect.Type, parent fieldPath, infos *[]fieldInfo) {
@@ -118,9 +134,10 @@ func (c *Config) scan(t reflect.Type, parent fieldPath, infos *[]fieldInfo) {
 			} else {
 				// for slices of primitives, we just add the fieldInfo
 				info := fieldInfo{
-					Path:  subPath.purge(),
-					Short: shortTag,
-					Type:  "[]" + field.Type.Elem().Kind().String(),
+					path:  subPath.purge(),
+					short: shortTag,
+					sType: "[]" + field.Type.Elem().Kind().String(),
+					field: field,
 				}
 				*infos = append(*infos, info)
 			}
@@ -136,20 +153,22 @@ func (c *Config) scan(t reflect.Type, parent fieldPath, infos *[]fieldInfo) {
 			} else {
 				// for maps of primitives, we just add the fieldInfo
 				property := fieldInfo{
-					Path:  subPath.purge(),
-					Short: shortTag,
-					Type:  "map[" + field.Type.Key().Kind().String() + "]" + field.Type.Elem().Kind().String(),
+					path:  subPath.purge(),
+					short: shortTag,
+					sType: "map[" + field.Type.Key().Kind().String() + "]" + field.Type.Elem().Kind().String(),
+					field: field,
 				}
 				*infos = append(*infos, property)
 			}
 		default:
 			property := fieldInfo{
-				Path:  subPath.purge(),
-				Short: shortTag,
-				Type:  field.Type.Kind().String(),
+				path:  subPath.purge(),
+				short: shortTag,
+				sType: field.Type.Kind().String(),
+				field: field,
 			}
 			if defValue, ok := c.getDefaultValue(t, field); ok {
-				property.DefaultValue = defValue
+				property.defaultValue = defValue
 			}
 
 			*infos = append(*infos, property)
@@ -157,10 +176,10 @@ func (c *Config) scan(t reflect.Type, parent fieldPath, infos *[]fieldInfo) {
 	}
 }
 
-func (p fieldPath) key(opts Options, sliceKey string) string {
+func (f fieldPath) key(opts Options, sliceKey, mapKey string) string {
 	var sb strings.Builder
 
-	for i, pc := range p {
+	for i, pc := range f {
 		if i > 0 {
 			sb.WriteRune(opts.keyDelimiter)
 		}
@@ -172,41 +191,59 @@ func (p fieldPath) key(opts Options, sliceKey string) string {
 			sb.WriteRune(']')
 		} else if pc.isMap {
 			sb.WriteRune(opts.keyDelimiter)
-			sb.WriteString("[k]")
+			sb.WriteRune('[')
+			sb.WriteString(mapKey)
+			sb.WriteRune(']')
 		}
 	}
 
 	return sb.String()
 }
 
-func (p fieldPath) purge() fieldPath {
+func (f fieldPath) purge() fieldPath {
 	//remove empty nodes
-	return slices.DeleteFunc(p, func(node *fieldPathNode) bool {
+	return slices.DeleteFunc(f, func(node *fieldPathNode) bool {
 		return node.key == ""
 	})
 }
 
-func (p fieldInfos) findByShort(key string) *fieldInfo {
-	for _, info := range p.fi {
-		if info.Short == key {
+func (f *fieldInfos) Infos() []FieldInfo {
+	result := make([]FieldInfo, 0, len(f.fi))
+	for i := range f.fi {
+		result = append(result, &f.fi[i])
+	}
+	return result
+}
+
+func (f *fieldInfos) findByShort(key string) *fieldInfo {
+	for _, info := range f.fi {
+		if info.short == key {
 			return &info
 		}
 	}
 	return nil
 }
 
-func (p fieldInfos) findByPath(path []string) *fieldInfo {
-	joinedPath := strings.Join(path, string(p.options.keyDelimiter))
-	for _, info := range p.fi {
-		keyNodes := make([]string, len(info.Path))
-		for i, node := range info.Path {
+func (f *fieldInfos) findByPath(path []string) *fieldInfo {
+	joinedPath := strings.Join(path, string(f.options.keyDelimiter))
+	for _, info := range f.fi {
+		keyNodes := make([]string, len(info.path))
+		for i, node := range info.path {
 			keyNodes[i] = node.key
 		}
-		joinedKey := strings.Join(keyNodes, string(p.options.keyDelimiter))
+		joinedKey := strings.Join(keyNodes, string(f.options.keyDelimiter))
 
 		if joinedKey == joinedPath {
 			return &info
 		}
 	}
 	return nil
+}
+
+func (f *fieldInfo) Path() string {
+	return f.path.key(newDefaultOptions(), "", "")
+}
+
+func (f *fieldInfo) Field() reflect.StructField {
+	return f.field
 }

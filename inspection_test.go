@@ -2,6 +2,7 @@ package conf
 
 import (
 	"github.com/stretchr/testify/assert"
+	"reflect"
 	"testing"
 )
 
@@ -35,7 +36,7 @@ func TestConfig_collectInfos(t *testing.T) {
 	testConfig_collectInfos(t, &struct {
 		String string `yaml:"string" short:"s" usage:"help"`
 	}{}, []fieldInfo{
-		{Path: []*fieldPathNode{{key: "string", usage: "help"}}, Short: "s", Type: "string"},
+		{path: []*fieldPathNode{{key: "string", usage: "help"}}, short: "s", sType: "string"},
 	})
 
 	testConfig_collectInfos(t, &struct {
@@ -45,11 +46,11 @@ func TestConfig_collectInfos(t *testing.T) {
 		Int32  int32        `yaml:"i32"`
 		Int    int64        `yaml:"i64"`
 	}{}, []fieldInfo{
-		{Path: []*fieldPathNode{{key: "cs"}}, Type: "string"},
-		{Path: []*fieldPathNode{{key: "f"}}, Type: "float64"},
-		{Path: []*fieldPathNode{{key: "i32"}}, Type: "int32"},
-		{Path: []*fieldPathNode{{key: "i64"}}, Type: "int64"},
-		{Path: []*fieldPathNode{{key: "s"}}, Type: "string"},
+		{path: []*fieldPathNode{{key: "cs"}}, sType: "string"},
+		{path: []*fieldPathNode{{key: "s"}}, sType: "string"},
+		{path: []*fieldPathNode{{key: "f"}}, sType: "float64"},
+		{path: []*fieldPathNode{{key: "i32"}}, sType: "int32"},
+		{path: []*fieldPathNode{{key: "i64"}}, sType: "int64"},
 	})
 
 	testConfig_collectInfos(t, &struct {
@@ -59,11 +60,11 @@ func TestConfig_collectInfos(t *testing.T) {
 		Int32  []int32        `yaml:"i32"`
 		Int    []int64        `yaml:"i64"`
 	}{}, []fieldInfo{
-		{Path: []*fieldPathNode{{key: "cs", isSlice: true}}, Type: "[]string"},
-		{Path: []*fieldPathNode{{key: "f", isSlice: true}}, Type: "[]float64"},
-		{Path: []*fieldPathNode{{key: "i32", isSlice: true}}, Type: "[]int32"},
-		{Path: []*fieldPathNode{{key: "i64", isSlice: true}}, Type: "[]int64"},
-		{Path: []*fieldPathNode{{key: "s", isSlice: true}}, Type: "[]string"},
+		{path: []*fieldPathNode{{key: "cs", isSlice: true}}, sType: "[]string"},
+		{path: []*fieldPathNode{{key: "s", isSlice: true}}, sType: "[]string"},
+		{path: []*fieldPathNode{{key: "f", isSlice: true}}, sType: "[]float64"},
+		{path: []*fieldPathNode{{key: "i32", isSlice: true}}, sType: "[]int32"},
+		{path: []*fieldPathNode{{key: "i64", isSlice: true}}, sType: "[]int64"},
 	})
 
 	testConfig_collectInfos(t, &struct {
@@ -73,11 +74,11 @@ func TestConfig_collectInfos(t *testing.T) {
 		Int32  map[string]int32        `yaml:"i32"`
 		Int    map[string]int64        `yaml:"i64"`
 	}{}, []fieldInfo{
-		{Path: []*fieldPathNode{{key: "cs", isMap: true}}, Type: "map[string]string"},
-		{Path: []*fieldPathNode{{key: "f", isMap: true}}, Type: "map[string]float64"},
-		{Path: []*fieldPathNode{{key: "i32", isMap: true}}, Type: "map[string]int32"},
-		{Path: []*fieldPathNode{{key: "i64", isMap: true}}, Type: "map[string]int64"},
-		{Path: []*fieldPathNode{{key: "s", isMap: true}}, Type: "map[string]string"},
+		{path: []*fieldPathNode{{key: "cs", isMap: true}}, sType: "map[string]string"},
+		{path: []*fieldPathNode{{key: "s", isMap: true}}, sType: "map[string]string"},
+		{path: []*fieldPathNode{{key: "f", isMap: true}}, sType: "map[string]float64"},
+		{path: []*fieldPathNode{{key: "i32", isMap: true}}, sType: "map[string]int32"},
+		{path: []*fieldPathNode{{key: "i64", isMap: true}}, sType: "map[string]int64"},
 	})
 
 	testConfig_collectInfos(t, &struct {
@@ -87,11 +88,11 @@ func TestConfig_collectInfos(t *testing.T) {
 		Int32  map[int]int32        `yaml:"i32"`
 		Int    map[int]int64        `yaml:"i64"`
 	}{}, []fieldInfo{
-		{Path: []*fieldPathNode{{key: "cs", isMap: true}}, Type: "map[int]string"},
-		{Path: []*fieldPathNode{{key: "f", isMap: true}}, Type: "map[int]float64"},
-		{Path: []*fieldPathNode{{key: "i32", isMap: true}}, Type: "map[int]int32"},
-		{Path: []*fieldPathNode{{key: "i64", isMap: true}}, Type: "map[int]int64"},
-		{Path: []*fieldPathNode{{key: "s", isMap: true}}, Type: "map[int]string"},
+		{path: []*fieldPathNode{{key: "cs", isMap: true}}, sType: "map[int]string"},
+		{path: []*fieldPathNode{{key: "s", isMap: true}}, sType: "map[int]string"},
+		{path: []*fieldPathNode{{key: "f", isMap: true}}, sType: "map[int]float64"},
+		{path: []*fieldPathNode{{key: "i32", isMap: true}}, sType: "map[int]int32"},
+		{path: []*fieldPathNode{{key: "i64", isMap: true}}, sType: "map[int]int64"},
 	})
 
 	testConfig_collectInfos(t, &struct {
@@ -100,14 +101,14 @@ func TestConfig_collectInfos(t *testing.T) {
 			Key   string `yaml:"key" usage:"key help"`
 		} `yaml:"array" usage:"array help: "`
 	}{}, []fieldInfo{
-		{Path: []*fieldPathNode{
-			{key: "array", isSlice: true, usage: "array help: "},
-			{key: "key", usage: "key help"},
-		}, Type: "string"},
-		{Path: []*fieldPathNode{
+		{path: []*fieldPathNode{
 			{key: "array", isSlice: true, usage: "array help: "},
 			{key: "value", usage: "value help"},
-		}, Type: "string"},
+		}, sType: "string"},
+		{path: []*fieldPathNode{
+			{key: "array", isSlice: true, usage: "array help: "},
+			{key: "key", usage: "key help"},
+		}, sType: "string"},
 	})
 
 	testConfig_collectInfos(t, &struct {
@@ -116,22 +117,22 @@ func TestConfig_collectInfos(t *testing.T) {
 			Key   string `yaml:"key" usage:"key help"`
 		} `yaml:"map" usage:"map help: "`
 	}{}, []fieldInfo{
-		{Path: []*fieldPathNode{
-			{key: "map", isMap: true, usage: "map help: "},
-			{key: "key", usage: "key help"},
-		}, Type: "string"},
-		{Path: []*fieldPathNode{
+		{path: []*fieldPathNode{
 			{key: "map", isMap: true, usage: "map help: "},
 			{key: "value", usage: "value help"},
-		}, Type: "string"},
+		}, sType: "string"},
+		{path: []*fieldPathNode{
+			{key: "map", isMap: true, usage: "map help: "},
+			{key: "key", usage: "key help"},
+		}, sType: "string"},
 	})
 
 	testConfig_collectInfos(t, &struct {
 		NoHelp string `yaml:"nohelp"`
 	}{}, []fieldInfo{
-		{Path: []*fieldPathNode{
+		{path: []*fieldPathNode{
 			{key: "nohelp"},
-		}, Type: "string"},
+		}, sType: "string"},
 	})
 
 	testConfig_collectInfos(t, &struct {
@@ -139,28 +140,28 @@ func TestConfig_collectInfos(t *testing.T) {
 	}{}, nil)
 
 	testConfig_collectInfos(t, &dynamicHelp{}, []fieldInfo{
-		{Path: []*fieldPathNode{
+		{path: []*fieldPathNode{
 			{key: "string", usage: "Dynamic help for String"},
-		}, Type: "string"},
+		}, sType: "string"},
 	})
 
 	testConfig_collectInfos(t, &defaultHelp{}, []fieldInfo{
-		{Path: []*fieldPathNode{
+		{path: []*fieldPathNode{
 			{key: "string"},
-		}, Type: "string", DefaultValue: "Default value"},
+		}, sType: "string", defaultValue: "Default value"},
 	})
 
 	// will not work, but will also not panic
 	testConfig_collectInfos(t, &defaultWithoutPointerHelp{}, []fieldInfo{
-		{Path: []*fieldPathNode{
+		{path: []*fieldPathNode{
 			{key: "string"},
-		}, Type: "string"},
+		}, sType: "string"},
 	})
 
 	testConfig_collectInfos(t, &defaultHelp{}, []fieldInfo{
-		{Path: []*fieldPathNode{
+		{path: []*fieldPathNode{
 			{key: "string"},
-		}, Type: "string", DefaultValue: "Default value via external function"},
+		}, sType: "string", defaultValue: "Default value via external function"},
 	}, WithDefaults(func(d *defaultHelp) {
 		d.String = "Default value via external function"
 	}))
@@ -170,10 +171,10 @@ func TestConfig_collectInfos(t *testing.T) {
 			Value string `yaml:"value" short:"v"`
 		} `yaml:"map"`
 	}{}, []fieldInfo{
-		{Path: []*fieldPathNode{
+		{path: []*fieldPathNode{
 			{key: "map", isMap: true},
 			{key: "value"},
-		}, Type: "string"},
+		}, sType: "string"},
 	})
 
 	testConfig_collectInfos(t, &struct {
@@ -181,10 +182,10 @@ func TestConfig_collectInfos(t *testing.T) {
 			Value string `yaml:"value" short:"v"`
 		} `yaml:"array"`
 	}{}, []fieldInfo{
-		{Path: []*fieldPathNode{
+		{path: []*fieldPathNode{
 			{key: "array", isSlice: true},
 			{key: "value"},
-		}, Type: "string"},
+		}, sType: "string"},
 	})
 
 	testConfig_collectInfos(t, &struct {
@@ -192,10 +193,10 @@ func TestConfig_collectInfos(t *testing.T) {
 			Values []string `yaml:"value" short:"v"`
 		} `yaml:"entry"`
 	}{}, []fieldInfo{
-		{Path: []*fieldPathNode{
+		{path: []*fieldPathNode{
 			{key: "entry"},
 			{key: "value", isSlice: true},
-		}, Type: "[]string", Short: "v"},
+		}, sType: "[]string", short: "v"},
 	})
 
 	testConfig_collectInfos(t, &struct {
@@ -205,17 +206,22 @@ func TestConfig_collectInfos(t *testing.T) {
 			} `yaml:"array"`
 		} `yaml:"array"`
 	}{}, []fieldInfo{
-		{Path: []*fieldPathNode{
+		{path: []*fieldPathNode{
 			{key: "array", isSlice: true},
 			{key: "array", isSlice: true},
 			{key: "value"},
-		}, Type: "string"},
+		}, sType: "string"},
 	})
 }
 
 func testConfig_collectInfos[T any](t *testing.T, dst *T, expected []fieldInfo, opts ...Option) {
 	t.Run("", func(t *testing.T) {
 		r := NewConfig(dst, opts...).collectInfos()
+
+		// ignore field content
+		for i := range r.fi {
+			r.fi[i].field = reflect.StructField{}
+		}
 		assert.Equal(t, expected, r.fi)
 	})
 }

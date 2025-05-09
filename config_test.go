@@ -41,10 +41,10 @@ func TestConfig_Parse_DefaultConfig(t *testing.T) {
 		"--bool",
 		"--bool2=true",
 		"--string=hello",
-		"--array.[0].key=name0",
-		"--array.[0].value=value0",
 		"--array.[1].key=name1",
 		"--array.[1].value=value1",
+		"--array.[0].key=name0",
+		"--array.[0].value=value0",
 		"--array[2].key=name2",
 		"--array[2].value=value2",
 		"--map.test1.key=name1",
@@ -243,6 +243,37 @@ func TestConfig_HelpFlags(t *testing.T) {
 		}),
 	)
 
+	expected := "        --bool            bool                  Bool usage                              \n"
+	expected += "        --bool2           bool                                                          \n"
+	expected += "  -s,   --string          string                This is a string                        \n"
+	expected += "  -a,   --string-array    []string                                                      \n"
+	expected += "        --raw-map[k]      map[string]interface                                          \n"
+	expected += "        --array[i].key    string                The key of the entry                    \n"
+	expected += "        --array[i].value  string                The value of the entry                  \n"
+	expected += "                                                Default: DEFAULT                        \n"
+	expected += "        --map[k].key      string                The key of the entry                    \n"
+	expected += "        --map[k].value    string                The value of the entry                  \n"
+	expected += "                                                Default: DEFAULT                        \n"
+	expected += "  -k,   --entry.key       string                The base entry: The key of the entry    \n"
+	expected += "        --entry.value     string                The base entry: The value of the entry  \n"
+	expected += "                                                Default: DEFAULT                        \n"
+
+	assert.Equal(t, expected, toTest.HelpFlags())
+}
+
+func TestConfig_HelpFlags_Sorted(t *testing.T) {
+	conf := testConfig{}
+
+	toTest := NewConfig(&conf,
+		WithDefaults(SetDefaults),
+		WithUsage(func(t *testConfig, f string) string {
+			if f == "Bool" {
+				return "Bool usage"
+			}
+			return ""
+		}),
+	)
+
 	expected := "        --array[i].key    string                The key of the entry                    \n"
 	expected += "        --array[i].value  string                The value of the entry                  \n"
 	expected += "                                                Default: DEFAULT                        \n"
@@ -258,10 +289,39 @@ func TestConfig_HelpFlags(t *testing.T) {
 	expected += "  -s,   --string          string                This is a string                        \n"
 	expected += "  -a,   --string-array    []string                                                      \n"
 
-	assert.Equal(t, expected, toTest.HelpFlags())
+	assert.Equal(t, expected, toTest.HelpFlagsSorted(PathSorter))
 }
 
 func TestConfig_HelpYaml(t *testing.T) {
+	conf := testConfig{}
+
+	toTest := NewConfig(&conf, WithDefaults(SetDefaults))
+
+	expected := `
+"bool": bool
+"bool2": bool
+"string": string # This is a string
+"string-array":
+  - []string
+"raw-map":
+  "k": map[string]interface
+"array":
+  -
+    "key": string # The key of the entry
+    "value": string # The value of the entry
+"map":
+  "k":
+    "key": string # The key of the entry
+    "value": string # The value of the entry
+"entry":
+  "key": string # The base entry: The key of the entry
+  "value": string # The base entry: The value of the entry
+`
+
+	assert.Equal(t, strings.TrimSpace(expected), strings.TrimSpace(toTest.HelpYaml()))
+}
+
+func TestConfig_HelpYaml_Sorted(t *testing.T) {
 	conf := testConfig{}
 
 	toTest := NewConfig(&conf, WithDefaults(SetDefaults))
@@ -287,7 +347,7 @@ func TestConfig_HelpYaml(t *testing.T) {
   - []string
 `
 
-	assert.Equal(t, strings.TrimSpace(expected), strings.TrimSpace(toTest.HelpYaml()))
+	assert.Equal(t, strings.TrimSpace(expected), strings.TrimSpace(toTest.HelpYamlSorted(PathSorter)))
 }
 
 type parent struct {
@@ -319,18 +379,18 @@ func TestConfig_ShadowStructs(t *testing.T) {
 		},
 	}, *c)
 
-	eArgs := "    --array   []string           array  \n"
+	eArgs := "    --string  string                    \n"
+	eArgs += "    --array   []string           array  \n"
 	eArgs += "    --map[k]  map[string]string  map    \n"
-	eArgs += "    --string  string                    \n"
 
 	assert.Equal(t, eArgs, config.HelpFlags())
 
 	eYaml := `
+"string": string
 "array":
   - []string # array
 "map":
   "k": map[string]string # map
-"string": string
 `
 	assert.Equal(t, strings.TrimSpace(eYaml), strings.TrimSpace(config.HelpYaml()))
 }

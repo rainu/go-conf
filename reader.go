@@ -17,6 +17,8 @@ type Reader struct {
 
 	running bool
 
+	preventSort bool
+
 	reKeyVal          *regexp.Regexp
 	reKeyValFlag      *regexp.Regexp
 	reKeyValShort     *regexp.Regexp
@@ -26,6 +28,13 @@ type Reader struct {
 	options    Options
 	fieldInfos *fieldInfos
 	args       []string
+}
+
+func newReaderWithoutSort(args []string, dst *fieldInfos, options Options) *Reader {
+	r := newReader(args, dst, options)
+	r.preventSort = true
+
+	return r
 }
 
 func newReader(args []string, dst *fieldInfos, options Options) *Reader {
@@ -141,7 +150,7 @@ func (r *Reader) collectLines() []line {
 				// check the type of the corresponding field
 				// it could be a slice ...
 				info := r.fieldInfos.findByPath(path)
-				if info != nil && strings.HasPrefix(info.Type, "[]") {
+				if info != nil && strings.HasPrefix(info.sType, "[]") {
 					// this is a slice, but the argument has no index given
 					// so here we add the index
 					// "i" is not the correct index,
@@ -159,9 +168,11 @@ func (r *Reader) collectLines() []line {
 	}
 
 	// sort lines
-	slices.SortFunc(lines, func(a, b line) int {
-		return strings.Compare(strings.Join(a.path, ""), strings.Join(b.path, ""))
-	})
+	if !r.preventSort {
+		slices.SortFunc(lines, func(a, b line) int {
+			return strings.Compare(strings.Join(a.path, ""), strings.Join(b.path, ""))
+		})
+	}
 
 	return lines
 }
@@ -203,7 +214,7 @@ func (r *Reader) tryShort(line string, key, value *string, i int) bool {
 		}
 
 		// convert to long-variant and delegate to the long-variant
-		line = r.options.prefixLong + corProperty.Path.key(r.options, fmt.Sprintf("%d", i)) + string(r.options.assignSign) + result[0][2]
+		line = r.options.prefixLong + corProperty.path.key(r.options, fmt.Sprintf("%d", i), "k") + string(r.options.assignSign) + result[0][2]
 		return r.tryLong(line, key, value)
 	}
 	return false
@@ -226,7 +237,7 @@ func (r *Reader) tryShortFlag(line string, key, value *string, i int) bool {
 		}
 
 		// convert to long-variant and delegate to the long-variant
-		line = r.options.prefixLong + corProperty.Path.key(r.options, fmt.Sprintf("%d", i))
+		line = r.options.prefixLong + corProperty.path.key(r.options, fmt.Sprintf("%d", i), "k")
 		return r.tryLongFlag(line, key, value)
 	}
 	return false

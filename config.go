@@ -63,8 +63,8 @@ func (c *Config) ParseArguments(args ...string) error {
 
 // ArgumentReader creates a new reader that reads the given arguments and transform them into yaml-format.
 func (c *Config) ArgumentReader(args ...string) io.ReadCloser {
-	properties := c.collectInfos()
-	reader := newReader(args, &properties, c.options)
+	infos := c.collectInfos()
+	reader := newReader(args, infos, c.options)
 	return reader
 }
 
@@ -121,12 +121,34 @@ func (c *Config) EnvironmentReader(env ...string) io.ReadCloser {
 	return c.ArgumentReader(args...)
 }
 
-// HelpFlags returns the help text for the flags in a table format.
+// HelpFlags returns the help text for the flags in a table format. Sorted by the order in struct.
 func (c *Config) HelpFlags() string {
-	return c.collectInfos().HelpFlags()
+	return c.HelpFlagsSorted(nil)
 }
 
-// HelpYaml returns the help text for the flags in a YAML format.
+// HelpFlagsSorted returns the help text for the flags in a table format. Sorted by the given sorter.
+func (c *Config) HelpFlagsSorted(sorter Sorter) string {
+	infos := c.collectInfos()
+
+	if sorter != nil {
+		infos.Sort(sorter)
+	}
+
+	return infos.HelpFlags()
+}
+
+// HelpYaml returns the help text for the flags in a YAML format. Sorted by the order in struct.
 func (c *Config) HelpYaml() string {
-	return c.collectInfos().HelpYaml()
+	return c.HelpYamlSorted(nil)
+}
+
+// HelpYamlSorted returns the help text for the flags in a YAML format. Sorted by the given sorter.
+func (c *Config) HelpYamlSorted(sorter Sorter) string {
+	infos := c.collectInfos()
+
+	if sorter != nil {
+		infos.Sort(sorter)
+	}
+
+	return infos.HelpYaml()
 }

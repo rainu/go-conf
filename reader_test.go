@@ -106,7 +106,7 @@ func TestReader_Short(t *testing.T) {
 		"-b=true",
 		"-B",
 	}
-	props := NewConfig(&testStruct).collectInfos()
+	infos := NewConfig(&testStruct).collectInfos()
 
 	expected := `
 "bool": true
@@ -116,7 +116,7 @@ func TestReader_Short(t *testing.T) {
 "string": string
 `
 
-	result, err := io.ReadAll(newReader(args, &props, newDefaultOptions()))
+	result, err := io.ReadAll(newReader(args, infos, newDefaultOptions()))
 	assert.NoError(t, err)
 	assert.Equal(t, strings.TrimSpace(expected), strings.TrimSpace(string(result)))
 }
