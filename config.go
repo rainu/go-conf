@@ -122,33 +122,29 @@ func (c *Config) EnvironmentReader(env ...string) io.ReadCloser {
 }
 
 // HelpFlags returns the help text for the flags in a table format. Sorted by the order in struct.
-func (c *Config) HelpFlags() string {
-	return c.HelpFlagsSorted(nil)
-}
-
-// HelpFlagsSorted returns the help text for the flags in a table format. Sorted by the given sorter.
-func (c *Config) HelpFlagsSorted(sorter Sorter) string {
-	infos := c.collectInfos()
-
-	if sorter != nil {
-		infos.Sort(sorter)
-	}
-
-	return infos.HelpFlags()
+func (c *Config) HelpFlags(opts ...HelpOption) string {
+	return c.help(opts...).HelpFlags()
 }
 
 // HelpYaml returns the help text for the flags in a YAML format. Sorted by the order in struct.
-func (c *Config) HelpYaml() string {
-	return c.HelpYamlSorted(nil)
+func (c *Config) HelpYaml(opts ...HelpOption) string {
+	return c.help(opts...).HelpYaml()
 }
 
-// HelpYamlSorted returns the help text for the flags in a YAML format. Sorted by the given sorter.
-func (c *Config) HelpYamlSorted(sorter Sorter) string {
+func (c *Config) help(opts ...HelpOption) *fieldInfos {
 	infos := c.collectInfos()
 
-	if sorter != nil {
-		infos.Sort(sorter)
+	options := HelpOptions{}
+	for _, opt := range opts {
+		opt(&options)
 	}
 
-	return infos.HelpYaml()
+	if options.sorter != nil {
+		infos.Sort(options.sorter)
+	}
+	if options.filter != nil {
+		infos.Filter(options.filter)
+	}
+
+	return infos
 }

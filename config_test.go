@@ -289,7 +289,29 @@ func TestConfig_HelpFlags_Sorted(t *testing.T) {
 	expected += "  -s,   --string          string                This is a string                        \n"
 	expected += "  -a,   --string-array    []string                                                      \n"
 
-	assert.Equal(t, expected, toTest.HelpFlagsSorted(PathSorter))
+	assert.Equal(t, expected, toTest.HelpFlags(WithSorter(PathSorter)))
+}
+
+func TestConfig_HelpFlags_Filtered(t *testing.T) {
+	conf := testConfig{}
+
+	toTest := NewConfig(&conf,
+		WithDefaults(SetDefaults),
+		WithUsage(func(t *testConfig, f string) string {
+			if f == "Bool" {
+				return "Bool usage"
+			}
+			return ""
+		}),
+	)
+
+	expected := "    --bool  bool  Bool usage  \n"
+
+	testFilter := func(a FieldInfo) bool {
+		return a.Path() != "bool"
+	}
+
+	assert.Equal(t, expected, toTest.HelpFlags(WithFilter(testFilter)))
 }
 
 func TestConfig_HelpYaml(t *testing.T) {
@@ -347,7 +369,23 @@ func TestConfig_HelpYaml_Sorted(t *testing.T) {
   - []string
 `
 
-	assert.Equal(t, strings.TrimSpace(expected), strings.TrimSpace(toTest.HelpYamlSorted(PathSorter)))
+	assert.Equal(t, strings.TrimSpace(expected), strings.TrimSpace(toTest.HelpYaml(WithSorter(PathSorter))))
+}
+
+func TestConfig_HelpYaml_Filtered(t *testing.T) {
+	conf := testConfig{}
+
+	toTest := NewConfig(&conf, WithDefaults(SetDefaults))
+
+	expected := `
+"bool": bool
+`
+
+	testFilter := func(a FieldInfo) bool {
+		return a.Path() != "bool"
+	}
+
+	assert.Equal(t, strings.TrimSpace(expected), strings.TrimSpace(toTest.HelpYaml(WithFilter(testFilter))))
 }
 
 type parent struct {
