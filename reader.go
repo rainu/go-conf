@@ -129,15 +129,32 @@ func (r *Reader) collectLines() []line {
 	for i := 0; i < len(r.args); i += 1 {
 		key := r.args[i]
 		var value string
+		var nextArg string
+		if i+1 < len(r.args) {
+			nextArg = r.args[i+1]
+		}
 
-		if !r.tryShort(key, &key, &value, i) {
-			if !r.tryShortFlag(key, &key, &value, i) {
-				if !r.tryLong(key, &key, &value) {
-					if !r.tryLongFlag(key, &key, &value) {
-						continue
-					}
-				}
+		skip := func() bool {
+			if r.tryShort(key, &key, &value, i) {
+				return false
 			}
+			if m, s := r.tryShortFlag(key, &key, &value, &nextArg, i); m {
+				if s {
+					// skip next argument
+					i += 1
+				}
+				return false
+			}
+			if r.tryLong(key, &key, &value) {
+				return false
+			}
+			if r.tryLongFlag(key, &key, &value) {
+				return false
+			}
+			return true
+		}()
+		if skip {
+			continue
 		}
 
 		// replace "array[0]" -> "array.[0]", "map[key].value" -> "map.[key].value"
@@ -220,10 +237,10 @@ func (r *Reader) tryShort(line string, key, value *string, i int) bool {
 	return false
 }
 
-func (r *Reader) tryShortFlag(line string, key, value *string, i int) bool {
+func (r *Reader) tryShortFlag(line string, key, value, next *string, i int) (match bool, skipNext bool) {
 	// for short variant we need the fieldInfos
 	if r.fieldInfos == nil {
-		return false
+		return false, false
 	}
 
 	result := r.reKeyValShortFlag.FindAllStringSubmatch(line, -1)
@@ -233,14 +250,24 @@ func (r *Reader) tryShortFlag(line string, key, value *string, i int) bool {
 		// search for fieldInfo with given short key
 		corField := r.fieldInfos.findByShort(k)
 		if corField == nil {
-			return false
+			return false, false
 		}
 
-		// convert to long-variant and delegate to the long-variant
-		line = r.options.prefixLong + corField.path.key(r.options, fmt.Sprintf("%d", i), "k")
-		return r.tryLongFlag(line, key, value)
+		if corField.sType == "bool" {
+			// convert to long-variant and delegate to the long-variant
+			line = r.options.prefixLong + corField.path.key(r.options, fmt.Sprintf("%d", i), "k")
+			return r.tryLongFlag(line, key, value), false
+		}
+
+		// if the target field is not a bool, we need to include the next argument
+		if next == nil {
+			return false, false
+		}
+
+		line = r.options.prefixLong + corField.path.key(r.options, fmt.Sprintf("%d", i), "k") + string(r.options.assignSign) + *next
+		return r.tryLong(line, key, value), true
 	}
-	return false
+	return false, false
 }
 
 func (r *Reader) splitPreservingBrackets(s string) []string {

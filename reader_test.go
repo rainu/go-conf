@@ -121,6 +121,36 @@ func TestReader_Short(t *testing.T) {
 	assert.Equal(t, strings.TrimSpace(expected), strings.TrimSpace(string(result)))
 }
 
+func TestReader_Short_Split(t *testing.T) {
+	testStruct := struct {
+		String string `yaml:"string" short:"s"`
+		Inner  struct {
+			Int  int  `yaml:"int" short:"i"`
+			Bool bool `yaml:"bool" short:"b"`
+		} `yaml:"inner"`
+		Bool bool `yaml:"bool" short:"B"`
+	}{}
+	args := []string{
+		"-s", "string",
+		"-B",
+		"-b", "true",
+		"-i", "42",
+	}
+	infos := NewConfig(&testStruct).collectInfos()
+
+	expected := `
+"bool": true
+"inner":
+  "bool": true
+  "int": 42
+"string": string
+`
+
+	result, err := io.ReadAll(newReader(args, infos, newDefaultOptions()))
+	assert.NoError(t, err)
+	assert.Equal(t, strings.TrimSpace(expected), strings.TrimSpace(string(result)))
+}
+
 func Test_collectLines(t *testing.T) {
 	tests := []struct {
 		given    []string
