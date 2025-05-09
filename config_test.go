@@ -45,10 +45,14 @@ func TestConfig_Parse_DefaultConfig(t *testing.T) {
 		"--array.[0].value=value0",
 		"--array.[1].key=name1",
 		"--array.[1].value=value1",
+		"--array[2].key=name2",
+		"--array[2].value=value2",
 		"--map.test1.key=name1",
 		"--map.test1.value=value1",
 		"--map.[test 2].key=name2",
 		"--map.[test 2].value=value2",
+		"--map[test 3].key=name3",
+		"--map[test 3].value=value3",
 		"--raw-map.string=\"*&.<>/{}|\"",
 		"--raw-map.number=2",
 		"--raw-map.[key with space]=value",
@@ -70,10 +74,12 @@ func TestConfig_Parse_DefaultConfig(t *testing.T) {
 		CustomArray: []testEntry{
 			{Key: "name0", Value: "value0"},
 			{Key: "name1", Value: "value1"},
+			{Key: "name2", Value: "value2"},
 		},
 		CustomMap: map[string]testEntry{
 			"test1":  {Key: "name1", Value: "value1"},
 			"test 2": {Key: "name2", Value: "value2"},
+			"test 3": {Key: "name3", Value: "value3"},
 		},
 		RawMap: map[string]any{
 			"string":         "*&.<>/{}|",
@@ -237,20 +243,20 @@ func TestConfig_HelpFlags(t *testing.T) {
 		}),
 	)
 
-	expected := "        --array.[i].key    string                The key of the entry                    \n"
-	expected += "        --array.[i].value  string                The value of the entry                  \n"
-	expected += "                                                 Default: DEFAULT                        \n"
-	expected += "        --bool             bool                  Bool usage                              \n"
-	expected += "        --bool2            bool                                                          \n"
-	expected += "  -k,   --entry.key        string                The base entry: The key of the entry    \n"
-	expected += "        --entry.value      string                The base entry: The value of the entry  \n"
-	expected += "                                                 Default: DEFAULT                        \n"
-	expected += "        --map.[k].key      string                The key of the entry                    \n"
-	expected += "        --map.[k].value    string                The value of the entry                  \n"
-	expected += "                                                 Default: DEFAULT                        \n"
-	expected += "        --raw-map.[k]      map[string]interface                                          \n"
-	expected += "  -s,   --string           string                This is a string                        \n"
-	expected += "  -a,   --string-array     []string                                                      \n"
+	expected := "        --array[i].key    string                The key of the entry                    \n"
+	expected += "        --array[i].value  string                The value of the entry                  \n"
+	expected += "                                                Default: DEFAULT                        \n"
+	expected += "        --bool            bool                  Bool usage                              \n"
+	expected += "        --bool2           bool                                                          \n"
+	expected += "  -k,   --entry.key       string                The base entry: The key of the entry    \n"
+	expected += "        --entry.value     string                The base entry: The value of the entry  \n"
+	expected += "                                                Default: DEFAULT                        \n"
+	expected += "        --map[k].key      string                The key of the entry                    \n"
+	expected += "        --map[k].value    string                The value of the entry                  \n"
+	expected += "                                                Default: DEFAULT                        \n"
+	expected += "        --raw-map[k]      map[string]interface                                          \n"
+	expected += "  -s,   --string          string                This is a string                        \n"
+	expected += "  -a,   --string-array    []string                                                      \n"
 
 	assert.Equal(t, expected, toTest.HelpFlags())
 }
@@ -301,9 +307,9 @@ func TestConfig_ShadowStructs(t *testing.T) {
 	assert.NoError(t, config.ParseArguments(
 		"--string=hello",
 		"--array.[0]=0",
-		"--array.[1]=1",
+		"--array[1]=1",
 		"--map.[one]=1",
-		"--map.[two]=2",
+		"--map[two]=2",
 	))
 	assert.Equal(t, parent{
 		Child{
@@ -313,9 +319,9 @@ func TestConfig_ShadowStructs(t *testing.T) {
 		},
 	}, *c)
 
-	eArgs := "    --array    []string           array  \n"
-	eArgs += "    --map.[k]  map[string]string  map    \n"
-	eArgs += "    --string   string                    \n"
+	eArgs := "    --array   []string           array  \n"
+	eArgs += "    --map[k]  map[string]string  map    \n"
+	eArgs += "    --string  string                    \n"
 
 	assert.Equal(t, eArgs, config.HelpFlags())
 

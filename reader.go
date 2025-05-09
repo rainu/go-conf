@@ -21,6 +21,7 @@ type Reader struct {
 	reKeyValFlag      *regexp.Regexp
 	reKeyValShort     *regexp.Regexp
 	reKeyValShortFlag *regexp.Regexp
+	reIndexApprev     *regexp.Regexp
 
 	options    Options
 	fieldInfos *fieldInfos
@@ -40,6 +41,8 @@ func newReader(args []string, dst *fieldInfos, options Options) *Reader {
 
 	r.reKeyValFlag = regexp.MustCompile(`^` + options.prefixLong + `([^` + string(options.assignSign) + `]*)$`)
 	r.reKeyValShortFlag = regexp.MustCompile(`^` + options.prefixShort + `([^` + string(options.assignSign) + `]*)$`)
+
+	r.reIndexApprev = regexp.MustCompile(`([^\` + string(options.keyDelimiter) + `])\[`)
 
 	return r
 }
@@ -128,6 +131,9 @@ func (r *Reader) collectLines() []line {
 			}
 		}
 
+		// replace "array[0]" -> "array.[0]", "map[key].value" -> "map.[key].value"
+		key = r.reIndexApprev.ReplaceAllString(key, fmt.Sprintf("$1%c[", r.options.keyDelimiter))
+
 		path := r.splitPreservingBrackets(key)
 		if r.fieldInfos != nil {
 			lastNode := path[len(path)-1]
@@ -144,7 +150,6 @@ func (r *Reader) collectLines() []line {
 					path = append(path, fmt.Sprintf("[%d]", i))
 				}
 			}
-
 		}
 
 		lines = append(lines, line{

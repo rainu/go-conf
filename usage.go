@@ -58,6 +58,7 @@ func (p fieldInfos) HelpFlags() string {
 			// we can dismiss the slice key in case there is a slice of primitives
 			long = strings.TrimSuffix(long, ".[i]")
 		}
+		long = strings.ReplaceAll(long, ".[", "[")
 
 		table.Append([]string{
 			short,
