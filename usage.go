@@ -47,14 +47,14 @@ func (f *fieldInfos) HelpFlags() string {
 	table.SetColumnSeparator("")
 	table.SetAutoWrapText(false)
 
-	for _, property := range f.fi {
-		short := property.short
+	for _, info := range f.fi {
+		short := info.short
 		if short != "" {
 			short = f.options.prefixShort + short
 			short += ", "
 		}
-		long := f.options.prefixLong + property.path.key(f.options, "i", "k")
-		if strings.HasPrefix(property.sType, "[]") {
+		long := f.options.prefixLong + info.path.key(f.options, "i", "k")
+		if strings.HasPrefix(info.sType, "[]") {
 			// we can dismiss the slice key in case there is a slice of primitives
 			long = strings.TrimSuffix(long, ".[i]")
 		}
@@ -63,16 +63,16 @@ func (f *fieldInfos) HelpFlags() string {
 		table.Append([]string{
 			short,
 			long,
-			property.sType,
-			property.path.Usage(),
+			info.sType,
+			info.path.Usage(),
 		})
 
-		if property.defaultValue != nil {
+		if info.defaultValue != nil {
 			table.Append([]string{
 				"",
 				"",
 				"",
-				fmt.Sprintf("Default: %v", property.defaultValue),
+				fmt.Sprintf("Default: %v", info.defaultValue),
 			})
 		}
 	}
@@ -84,13 +84,13 @@ func (f *fieldInfos) HelpFlags() string {
 func (f *fieldInfos) HelpYaml() string {
 	fakeArgs := make([]string, 0, len(f.fi))
 
-	for _, property := range f.fi {
+	for _, fInfo := range f.fi {
 		arg := f.options.prefixLong
-		arg += property.path.key(f.options, "0", "k")
+		arg += fInfo.path.key(f.options, "0", "k")
 		arg += string(f.options.assignSign)
-		arg += property.sType
+		arg += fInfo.sType
 
-		help := property.path.Usage()
+		help := fInfo.path.Usage()
 		if help != "" {
 			arg += " # " + help
 		}

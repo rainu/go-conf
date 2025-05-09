@@ -208,13 +208,13 @@ func (r *Reader) tryShort(line string, key, value *string, i int) bool {
 		k := result[0][1]
 
 		// search for fieldInfo with given short key
-		corProperty := r.fieldInfos.findByShort(k)
-		if corProperty == nil {
+		corField := r.fieldInfos.findByShort(k)
+		if corField == nil {
 			return false
 		}
 
 		// convert to long-variant and delegate to the long-variant
-		line = r.options.prefixLong + corProperty.path.key(r.options, fmt.Sprintf("%d", i), "k") + string(r.options.assignSign) + result[0][2]
+		line = r.options.prefixLong + corField.path.key(r.options, fmt.Sprintf("%d", i), "k") + string(r.options.assignSign) + result[0][2]
 		return r.tryLong(line, key, value)
 	}
 	return false
@@ -231,13 +231,13 @@ func (r *Reader) tryShortFlag(line string, key, value *string, i int) bool {
 		k := result[0][1]
 
 		// search for fieldInfo with given short key
-		corProperty := r.fieldInfos.findByShort(k)
-		if corProperty == nil {
+		corField := r.fieldInfos.findByShort(k)
+		if corField == nil {
 			return false
 		}
 
 		// convert to long-variant and delegate to the long-variant
-		line = r.options.prefixLong + corProperty.path.key(r.options, fmt.Sprintf("%d", i), "k")
+		line = r.options.prefixLong + corField.path.key(r.options, fmt.Sprintf("%d", i), "k")
 		return r.tryLongFlag(line, key, value)
 	}
 	return false

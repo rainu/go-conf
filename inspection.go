@@ -152,26 +152,26 @@ func (c *Config) scan(t reflect.Type, parent fieldPath, infos *[]fieldInfo) {
 				c.scan(elemType, subPath, infos)
 			} else {
 				// for maps of primitives, we just add the fieldInfo
-				property := fieldInfo{
+				fInfo := fieldInfo{
 					path:  subPath.purge(),
 					short: shortTag,
 					sType: "map[" + field.Type.Key().Kind().String() + "]" + field.Type.Elem().Kind().String(),
 					field: field,
 				}
-				*infos = append(*infos, property)
+				*infos = append(*infos, fInfo)
 			}
 		default:
-			property := fieldInfo{
+			fInfo := fieldInfo{
 				path:  subPath.purge(),
 				short: shortTag,
 				sType: field.Type.Kind().String(),
 				field: field,
 			}
 			if defValue, ok := c.getDefaultValue(t, field); ok {
-				property.defaultValue = defValue
+				fInfo.defaultValue = defValue
 			}
 
-			*infos = append(*infos, property)
+			*infos = append(*infos, fInfo)
 		}
 	}
 }
