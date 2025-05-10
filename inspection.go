@@ -121,6 +121,15 @@ func (c *Config) scan(t reflect.Type, parent fieldPath, infos *[]fieldInfo) {
 		case reflect.Ptr:
 			if field.Type.Elem().Kind() == reflect.Struct {
 				c.scan(field.Type.Elem(), subPath, infos)
+			} else {
+				// for pointers to primitives, we just add the fieldInfo
+				info := fieldInfo{
+					path:  subPath.purge(),
+					short: shortTag,
+					sType: "*" + field.Type.Elem().Kind().String(),
+					field: field,
+				}
+				*infos = append(*infos, info)
 			}
 		case reflect.Slice, reflect.Array:
 			node.isSlice = true

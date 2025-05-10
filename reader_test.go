@@ -98,18 +98,21 @@ func TestReader_Short(t *testing.T) {
 			Int  int  `yaml:"int" short:"i"`
 			Bool bool `yaml:"bool" short:"B"`
 		} `yaml:"inner"`
-		Bool bool `yaml:"bool" short:"b"`
+		Bool  bool  `yaml:"bool" short:"b"`
+		BoolP *bool `yaml:"boolP" short:"p"`
 	}{}
 	args := []string{
 		"-s=string",
 		"-i=42",
 		"-b=true",
 		"-B",
+		"-p",
 	}
 	infos := NewConfig(&testStruct).collectInfos()
 
 	expected := `
 "bool": true
+"boolP": true
 "inner":
   "bool": true
   "int": 42

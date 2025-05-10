@@ -110,7 +110,8 @@ func main() {
 
 For applying default values you have to define a function which is responsible for setting those values.
 **Attention**: This function will be called **after** the unmarshalling! So you have to check if a field is already filled
-before setting a default value. Otherwise, you will override the provided value!
+before setting a default value. Otherwise, you will override the provided value! 
+Because of that it is recommended to use pointers for primitive types. Otherwise, you cannot really be sure if the field is intended to be empty.
 
 To define suche a function there are two ways to do this:
 
@@ -124,13 +125,13 @@ import (
 )
 
 type MyConfig struct {
-	String string `yaml:"string"`
+	String *string `yaml:"string"`
 }
 
 func Default(m *MyConfig) {
 	// check if the field is already set
-	if m.String == "" {
-        m.String = "default"
+	if m.String == nil {
+        m.String = yacl.P("default")
     }
 }
 
@@ -156,14 +157,14 @@ import (
 )
 
 type MyConfig struct {
-	String string `yaml:"string"`
+	String *string `yaml:"string"`
 }
 
 // implements the interface >yacl.DefaultSetter<
 func (m *MyConfig) SetDefaults() {
 	// check if the field is already set
-	if m.String == "" {
-		m.String = "default"
+	if m.String == nil {
+		m.String = yacl.P("default")
 	}
 }
 

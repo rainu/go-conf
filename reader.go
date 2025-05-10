@@ -253,7 +253,7 @@ func (r *Reader) tryShortFlag(line string, key, value, next *string, i int) (mat
 			return false, false
 		}
 
-		if corField.sType == "bool" {
+		if corField.sType == "bool" || corField.sType == "*bool" {
 			// convert to long-variant and delegate to the long-variant
 			line = r.options.prefixLong + corField.path.key(r.options, fmt.Sprintf("%d", i), "k")
 			return r.tryLongFlag(line, key, value), false

@@ -63,7 +63,7 @@ func (f *fieldInfos) HelpFlags() string {
 		table.Append([]string{
 			short,
 			long,
-			info.sType,
+			strings.TrimPrefix(info.sType, "*"), // remove pointer prefix
 			info.path.Usage(),
 		})
 
@@ -88,7 +88,7 @@ func (f *fieldInfos) HelpYaml() string {
 		arg := f.options.prefixLong
 		arg += fInfo.path.key(f.options, "0", "k")
 		arg += string(f.options.assignSign)
-		arg += fInfo.sType
+		arg += strings.TrimPrefix(fInfo.sType, "*") // remove pointer prefix
 
 		help := fInfo.path.Usage()
 		if help != "" {

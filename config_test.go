@@ -9,13 +9,16 @@ import (
 type testConfig struct {
 	Bool        bool                 `yaml:"bool"`
 	Bool2       bool                 `yaml:"bool2"`
+	BoolP       *bool                `yaml:"boolP"`
 	String      string               `yaml:"string" short:"s" usage:"This is a string"`
+	StringP     *string              `yaml:"stringP"`
 	StringArray []string             `yaml:"string-array" short:"a"`
 	RawMap      map[string]any       `yaml:"raw-map"`
 	CustomArray []testEntry          `yaml:"array"`
 	CustomMap   map[string]testEntry `yaml:"map"`
 
-	Entry testEntry `yaml:"entry" usage:"The base entry: "`
+	Entry  testEntry  `yaml:"entry" usage:"The base entry: "`
+	EntryP *testEntry `yaml:"entryP" usage:"The base entryP: "`
 }
 
 type testEntry struct {
@@ -40,6 +43,7 @@ func TestConfig_Parse_DefaultConfig(t *testing.T) {
 	args := []string{
 		"--bool",
 		"--bool2=true",
+		"--boolP=false",
 		"--string=hello",
 		"--array.[1].key=name1",
 		"--array.[1].value=value1",
@@ -59,12 +63,15 @@ func TestConfig_Parse_DefaultConfig(t *testing.T) {
 		"--string-array.[0]=value1",
 		"--string-array.[1]=value2",
 		"--string-array.[2]=\"*&.<>/{}|\"",
+		"--entry.key=entryKey",
+		"--entryP.key=entryKey",
 	}
 
 	assert.NoError(t, NewConfig(&conf).ParseArguments(args...))
 	assert.Equal(t, testConfig{
 		Bool:   true,
 		Bool2:  true,
+		BoolP:  P(false),
 		String: "hello",
 		StringArray: []string{
 			"value1",
@@ -85,6 +92,12 @@ func TestConfig_Parse_DefaultConfig(t *testing.T) {
 			"string":         "*&.<>/{}|",
 			"key with space": "value",
 			"number":         uint64(2),
+		},
+		Entry: testEntry{
+			Key: "entryKey",
+		},
+		EntryP: &testEntry{
+			Key: "entryKey",
 		},
 	}, conf)
 }
@@ -245,20 +258,25 @@ func TestConfig_HelpFlags(t *testing.T) {
 		}),
 	)
 
-	expected := "        --bool            bool                  Bool usage                              \n"
-	expected += "        --bool2           bool                                                          \n"
-	expected += "  -s,   --string          string                This is a string                        \n"
-	expected += "  -a,   --string-array    []string                                                      \n"
-	expected += "        --raw-map[k]      map[string]interface                                          \n"
-	expected += "        --array[i].key    string                The key of the entry                    \n"
-	expected += "        --array[i].value  string                The value of the entry                  \n"
-	expected += "                                                Default: DEFAULT                        \n"
-	expected += "        --map[k].key      string                The key of the entry                    \n"
-	expected += "        --map[k].value    string                The value of the entry                  \n"
-	expected += "                                                Default: DEFAULT                        \n"
-	expected += "  -k,   --entry.key       string                The base entry: The key of the entry    \n"
-	expected += "        --entry.value     string                The base entry: The value of the entry  \n"
-	expected += "                                                Default: DEFAULT                        \n"
+	expected := "        --bool            bool                  Bool usage                               \n"
+	expected += "        --bool2           bool                                                           \n"
+	expected += "        --boolP           bool                                                           \n"
+	expected += "  -s,   --string          string                This is a string                         \n"
+	expected += "        --stringP         string                                                         \n"
+	expected += "  -a,   --string-array    []string                                                       \n"
+	expected += "        --raw-map[k]      map[string]interface                                           \n"
+	expected += "        --array[i].key    string                The key of the entry                     \n"
+	expected += "        --array[i].value  string                The value of the entry                   \n"
+	expected += "                                                Default: DEFAULT                         \n"
+	expected += "        --map[k].key      string                The key of the entry                     \n"
+	expected += "        --map[k].value    string                The value of the entry                   \n"
+	expected += "                                                Default: DEFAULT                         \n"
+	expected += "  -k,   --entry.key       string                The base entry: The key of the entry     \n"
+	expected += "        --entry.value     string                The base entry: The value of the entry   \n"
+	expected += "                                                Default: DEFAULT                         \n"
+	expected += "  -k,   --entryP.key      string                The base entryP: The key of the entry    \n"
+	expected += "        --entryP.value    string                The base entryP: The value of the entry  \n"
+	expected += "                                                Default: DEFAULT                         \n"
 
 	assert.Equal(t, expected, toTest.HelpFlags())
 }
@@ -276,20 +294,25 @@ func TestConfig_HelpFlags_Sorted(t *testing.T) {
 		}),
 	)
 
-	expected := "        --array[i].key    string                The key of the entry                    \n"
-	expected += "        --array[i].value  string                The value of the entry                  \n"
-	expected += "                                                Default: DEFAULT                        \n"
-	expected += "        --bool            bool                  Bool usage                              \n"
-	expected += "        --bool2           bool                                                          \n"
-	expected += "  -k,   --entry.key       string                The base entry: The key of the entry    \n"
-	expected += "        --entry.value     string                The base entry: The value of the entry  \n"
-	expected += "                                                Default: DEFAULT                        \n"
-	expected += "        --map[k].key      string                The key of the entry                    \n"
-	expected += "        --map[k].value    string                The value of the entry                  \n"
-	expected += "                                                Default: DEFAULT                        \n"
-	expected += "        --raw-map[k]      map[string]interface                                          \n"
-	expected += "  -s,   --string          string                This is a string                        \n"
-	expected += "  -a,   --string-array    []string                                                      \n"
+	expected := "        --array[i].key    string                The key of the entry                     \n"
+	expected += "        --array[i].value  string                The value of the entry                   \n"
+	expected += "                                                Default: DEFAULT                         \n"
+	expected += "        --bool            bool                  Bool usage                               \n"
+	expected += "        --bool2           bool                                                           \n"
+	expected += "        --boolP           bool                                                           \n"
+	expected += "  -k,   --entry.key       string                The base entry: The key of the entry     \n"
+	expected += "        --entry.value     string                The base entry: The value of the entry   \n"
+	expected += "                                                Default: DEFAULT                         \n"
+	expected += "  -k,   --entryP.key      string                The base entryP: The key of the entry    \n"
+	expected += "        --entryP.value    string                The base entryP: The value of the entry  \n"
+	expected += "                                                Default: DEFAULT                         \n"
+	expected += "        --map[k].key      string                The key of the entry                     \n"
+	expected += "        --map[k].value    string                The value of the entry                   \n"
+	expected += "                                                Default: DEFAULT                         \n"
+	expected += "        --raw-map[k]      map[string]interface                                           \n"
+	expected += "  -s,   --string          string                This is a string                         \n"
+	expected += "  -a,   --string-array    []string                                                       \n"
+	expected += "        --stringP         string                                                         \n"
 
 	assert.Equal(t, expected, toTest.HelpFlags(WithSorter(PathSorter)))
 }
@@ -324,7 +347,9 @@ func TestConfig_HelpYaml(t *testing.T) {
 	expected := `
 "bool": bool
 "bool2": bool
+"boolP": bool
 "string": string # This is a string
+"stringP": string
 "string-array":
   - []string
 "raw-map":
@@ -340,6 +365,9 @@ func TestConfig_HelpYaml(t *testing.T) {
 "entry":
   "key": string # The base entry: The key of the entry
   "value": string # The base entry: The value of the entry
+"entryP":
+  "key": string # The base entryP: The key of the entry
+  "value": string # The base entryP: The value of the entry
 `
 
 	assert.Equal(t, strings.TrimSpace(expected), strings.TrimSpace(toTest.HelpYaml()))
@@ -357,9 +385,13 @@ func TestConfig_HelpYaml_Sorted(t *testing.T) {
     "value": string # The value of the entry
 "bool": bool
 "bool2": bool
+"boolP": bool
 "entry":
   "key": string # The base entry: The key of the entry
   "value": string # The base entry: The value of the entry
+"entryP":
+  "key": string # The base entryP: The key of the entry
+  "value": string # The base entryP: The value of the entry
 "map":
   "k":
     "key": string # The key of the entry
@@ -369,6 +401,7 @@ func TestConfig_HelpYaml_Sorted(t *testing.T) {
 "string": string # This is a string
 "string-array":
   - []string
+"stringP": string
 `
 
 	assert.Equal(t, strings.TrimSpace(expected), strings.TrimSpace(toTest.HelpYaml(WithSorter(PathSorter))))

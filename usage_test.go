@@ -11,7 +11,7 @@ func TestFieldInfos_HelpFlags(t *testing.T) {
 		fi: []fieldInfo{
 			{path: fieldPath{{key: "a-key", usage: "help for key1"}}, short: "k", sType: "string"},
 			{path: fieldPath{{key: "z-key", usage: "help for key3"}}, sType: "int32"},
-			{path: fieldPath{{key: "b-key", usage: "help for key2"}}, sType: "int64"},
+			{path: fieldPath{{key: "b-key", usage: "help for key2"}}, sType: "*int64"},
 			{path: fieldPath{{key: "n"}, {key: "key", usage: "help: ", isSlice: true}, {key: "value", usage: "value"}}, sType: "float64"},
 			{path: fieldPath{{key: "p"}, {key: "slice", usage: "help: ", isSlice: true}}, sType: "[]string"},
 			{path: fieldPath{{key: "m"}, {key: "key", usage: "help: ", isMap: true}, {key: "value", usage: "value"}}, sType: "float32"},
