@@ -108,7 +108,11 @@ func main() {
 
 ## Define default values
 
-For applying default values there are two ways to do this:
+For applying default values you have to define a function which is responsible for setting those values.
+**Attention**: This function will be called **after** the unmarshalling! So you have to check if a field is already filled
+before setting a default value. Otherwise, you will override the provided value!
+
+To define suche a function there are two ways to do this:
 
 ### Register a function
 
@@ -124,7 +128,10 @@ type MyConfig struct {
 }
 
 func Default(m *MyConfig) {
-	m.String = "default"
+	// check if the field is already set
+	if m.String == "" {
+        m.String = "default"
+    }
 }
 
 func main() {
@@ -154,7 +161,10 @@ type MyConfig struct {
 
 // implements the interface >yacl.DefaultSetter<
 func (m *MyConfig) SetDefaults() {
-	m.String = "default"
+	// check if the field is already set
+	if m.String == "" {
+		m.String = "default"
+	}
 }
 
 func main() {

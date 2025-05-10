@@ -11,17 +11,14 @@ import (
 type Config struct {
 	options Options
 
-	isFirstParse bool
-
 	dest any
 }
 
 // NewConfig creates a new Config instance where all parse-results will be reflected in the given destination.
 func NewConfig[T any](destination *T, opts ...Option) *Config {
 	p := &Config{
-		options:      newDefaultOptions(),
-		isFirstParse: true,
-		dest:         destination,
+		options: newDefaultOptions(),
+		dest:    destination,
 	}
 
 	// apply options
@@ -34,12 +31,6 @@ func NewConfig[T any](destination *T, opts ...Option) *Config {
 
 // ParseYaml parses the given YAML reader and sets the values in the destination struct.
 func (c *Config) ParseYaml(reader io.Reader) error {
-	if c.isFirstParse {
-		c.isFirstParse = false
-		if c.options.autoApplyDefaults {
-			c.ApplyDefaults()
-		}
-	}
 	return yaml.NewDecoder(reader, c.options.decodeOptions...).Decode(c.dest)
 }
 
@@ -58,6 +49,11 @@ func (c *Config) ParseArguments(args ...string) error {
 		// ignore EOF error (it would be occurred if no args are given)
 		return err
 	}
+
+	if c.options.autoApplyDefaults {
+		c.ApplyDefaults()
+	}
+
 	return nil
 }
 

@@ -210,7 +210,9 @@ func TestConfig_Parse_WithDefaults(t *testing.T) {
 		"--map.[test 2].key=name2",
 	}
 	p := NewConfig(&conf, WithDefaults(func(t *testEntry) {
-		t.Value = "DEFAULT"
+		if t.Value == "" {
+			t.Value = "DEFAULT"
+		}
 	}))
 
 	assert.NoError(t, p.ParseArguments(args...))

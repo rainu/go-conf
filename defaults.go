@@ -46,6 +46,32 @@ func (c *Config) applyDefaultsRecursive(t reflect.Type, v reflect.Value) {
 			if field.Type.Elem().Kind() == reflect.Struct && !fieldValue.IsNil() {
 				c.applyDefaultsRecursive(field.Type.Elem(), fieldValue.Elem())
 			}
+		case reflect.Slice:
+			if !fieldValue.IsNil() {
+				for i := 0; i < fieldValue.Len(); i++ {
+					elem := fieldValue.Index(i)
+					if elem.Kind() == reflect.Struct {
+						c.applyDefaultsRecursive(elem.Type(), elem)
+					} else if elem.Kind() == reflect.Ptr && elem.Type().Elem().Kind() == reflect.Struct && !elem.IsNil() {
+						c.applyDefaultsRecursive(elem.Type().Elem(), elem.Elem())
+					}
+				}
+			}
+		case reflect.Map:
+			if !fieldValue.IsNil() {
+				iter := fieldValue.MapRange()
+				for iter.Next() {
+					elem := iter.Value()
+					if elem.Kind() == reflect.Struct {
+						temp := reflect.New(elem.Type()).Elem()
+						temp.Set(elem)
+						c.applyDefaultsRecursive(elem.Type(), temp)
+						fieldValue.SetMapIndex(iter.Key(), temp)
+					} else if elem.Kind() == reflect.Ptr && elem.Type().Elem().Kind() == reflect.Struct && !elem.IsNil() {
+						c.applyDefaultsRecursive(elem.Type().Elem(), elem.Elem())
+					}
+				}
+			}
 		default:
 			// ignore other types
 		}

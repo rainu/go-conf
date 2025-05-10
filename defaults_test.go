@@ -18,7 +18,9 @@ type defaultInner1 struct {
 }
 
 func (d defaultInner1) SetDefaults() {
-	d.String = "Should not be called"
+	if d.String == "" {
+		d.String = "Should not be called"
+	}
 }
 
 type defaultInner2 struct {
@@ -26,28 +28,26 @@ type defaultInner2 struct {
 }
 
 func (d *defaultInner2) SetDefaults() {
-	d.String = "defaultInner2"
+	if d.String == "" {
+		d.String = "defaultInner2"
+	}
 }
 
 func TestConfig_ApplyDefaults(t *testing.T) {
 	c := &defaultS1{}
 
-	callCount := 0
 	toTest := NewConfig(c,
 		WithDefaults(func(d *defaultS1) {
-			d.String = "defaultS1"
-			if c == d {
-				callCount++
+			if d.String == "" {
+				d.String = "defaultS1"
 			}
 		}),
 		WithDefaults(func(d *defaultInner1) {
-			d.String = "defaultInner1"
-			if &c.Inner == d {
-				callCount++
+			if d.String == "" {
+				d.String = "defaultInner1"
 			}
 		}),
 	)
-	assert.True(t, toTest.isFirstParse)
 
 	toTest.ParseArguments()
 	assert.Equal(t, defaultS1{
@@ -59,23 +59,41 @@ func TestConfig_ApplyDefaults(t *testing.T) {
 		},
 		String: "defaultS1",
 	}, *c)
-	assert.False(t, toTest.isFirstParse)
-	assert.Equal(t, 2, callCount, "Default values should be applied only once (first parse action)")
-
-	toTest.ParseArguments()
-	assert.False(t, toTest.isFirstParse)
-	assert.Equal(t, 2, callCount, "Default values should be applied only once (first parse action)")
 }
 
 func TestConfig_ApplyDefaults_WithoutPointerReceiver(t *testing.T) {
 	c := &defaultInner1{}
 
 	toTest := NewConfig(c)
-	assert.True(t, toTest.isFirstParse)
 
 	toTest.ParseArguments()
 	assert.Equal(t, defaultInner1{
 		Inner: defaultInner2{"defaultInner2"},
 	}, *c)
-	assert.False(t, toTest.isFirstParse)
+}
+
+func TestConfig_ApplyDefaultsOnDynamicElements(t *testing.T) {
+	c := &struct {
+		A []struct {
+			S *string       `yaml:"s"`
+			I defaultInner2 `yaml:"i"`
+		} `yaml:"a"`
+		M map[string]struct {
+			S string        `yaml:"s"`
+			I defaultInner2 `yaml:"i"`
+		} `yaml:"m"`
+	}{}
+	conf := NewConfig(c)
+	assert.NoError(t, conf.ParseArguments(
+		"--a.[0].s=string",
+		"--a.[1].i.string=myValue",
+		`--m.1.s=string`,
+		`--m.2.i.string=myValue`,
+	))
+
+	assert.Equal(t, "string", *c.A[0].S)
+	assert.Equal(t, "defaultInner2", c.A[0].I.String)
+	assert.Equal(t, "myValue", c.A[1].I.String)
+	assert.Equal(t, "defaultInner2", c.M["1"].I.String)
+	assert.Equal(t, "myValue", c.M["2"].I.String)
 }
