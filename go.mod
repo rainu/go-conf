@@ -1,4 +1,4 @@
-module github.com/rainu/go-conf
+module github.com/rainu/go-yacl
 
 go 1.24.2
 

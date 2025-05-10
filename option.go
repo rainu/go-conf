@@ -1,4 +1,4 @@
-package conf
+package yacl
 
 import (
 	"github.com/goccy/go-yaml"

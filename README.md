@@ -1,9 +1,11 @@
-[![Go](https://github.com/rainu/go-conf/actions/workflows/build.yml/badge.svg)](https://github.com/rainu/go-conf/actions/workflows/build.yml)
-[![codecov](https://codecov.io/gh/rainu/go-conf/branch/main/graph/badge.svg)](https://codecov.io/gh/rainu/go-conf)
-[![Go Report Card](https://goreportcard.com/badge/github.com/rainu/go-conf)](https://goreportcard.com/report/github.com/rainu/go-conf)
-[![Go Reference](https://pkg.go.dev/badge/github.com/rainu/go-conf.svg)](https://pkg.go.dev/github.com/rainu/go-conf)
+[![Go](https://github.com/rainu/go-yacl/actions/workflows/build.yml/badge.svg)](https://github.com/rainu/go-yacl/actions/workflows/build.yml)
+[![codecov](https://codecov.io/gh/rainu/go-yacl/branch/main/graph/badge.svg)](https://codecov.io/gh/rainu/go-yacl)
+[![Go Report Card](https://goreportcard.com/badge/github.com/rainu/go-yacl)](https://goreportcard.com/report/github.com/rainu/go-yacl)
+[![Go Reference](https://pkg.go.dev/badge/github.com/rainu/go-yacl.svg)](https://pkg.go.dev/github.com/rainu/go-yacl)
 
-# go-conf
+# go-yacl
+
+**Y**et **a**nother **c**onfiguration **l**ibrary for Go.
 
 This library parses command line flags, environment variables, and configuration files (yaml) into a struct.
 
@@ -18,7 +20,7 @@ Therefore, you have to use the yaml-tags for defining the key names.
 package main
 
 import (
-	"github.com/rainu/go-conf"
+	"github.com/rainu/go-yacl"
 )
 
 type MyConfig struct {
@@ -28,7 +30,7 @@ type MyConfig struct {
 func main() {
 	c := MyConfig{}
 
-	config := conf.NewConfig(&c)
+	config := yacl.NewConfig(&c)
 	err := config.ParseArguments("--help")
 	if err != nil {
 		panic(err)
@@ -46,7 +48,7 @@ func main() {
 package main
 
 import (
-	"github.com/rainu/go-conf"
+	"github.com/rainu/go-yacl"
 )
 
 type MyConfig struct {
@@ -56,7 +58,7 @@ type MyConfig struct {
 func main() {
 	c := MyConfig{}
 
-	config := conf.NewConfig(&c)
+	config := yacl.NewConfig(&c)
 	err := config.ParseEnvironment("CFG_0=--help")
 	if err != nil {
 		panic(err)
@@ -74,7 +76,7 @@ func main() {
 package main
 
 import (
-	"github.com/rainu/go-conf"
+	"github.com/rainu/go-yacl"
 	"os"
 )
 
@@ -85,7 +87,7 @@ type MyConfig struct {
 func main() {
 	c := MyConfig{}
 
-	config := conf.NewConfig(&c)
+	config := yacl.NewConfig(&c)
 
 	yamlFile, err := os.Open("/path/to/config.yaml")
 	if err != nil {
@@ -114,7 +116,7 @@ For applying default values there are two ways to do this:
 package main
 
 import (
-	"github.com/rainu/go-conf"
+	"github.com/rainu/go-yacl"
 )
 
 type MyConfig struct {
@@ -128,7 +130,7 @@ func Default(m *MyConfig) {
 func main() {
 	c := MyConfig{}
 
-	config := conf.NewConfig(&c, conf.WithDefaults(Default))
+	config := yacl.NewConfig(&c, yacl.WithDefaults(Default))
 	err := config.ParseArguments()
 	if err != nil {
 		panic(err)
@@ -143,14 +145,14 @@ func main() {
 package main
 
 import (
-	"github.com/rainu/go-conf"
+	"github.com/rainu/go-yacl"
 )
 
 type MyConfig struct {
 	String string `yaml:"string"`
 }
 
-// implements the interface >conf.DefaultSetter<
+// implements the interface >yacl.DefaultSetter<
 func (m *MyConfig) SetDefaults() {
 	m.String = "default"
 }
@@ -158,7 +160,7 @@ func (m *MyConfig) SetDefaults() {
 func main() {
 	c := MyConfig{}
 
-	config := conf.NewConfig(&c)
+	config := yacl.NewConfig(&c)
 	err := config.ParseArguments()
 	if err != nil {
 		panic(err)
@@ -185,7 +187,7 @@ type MyConfig struct {
 package main
 
 import (
-	"github.com/rainu/go-conf"
+	"github.com/rainu/go-yacl"
 )
 
 type MyConfig struct {
@@ -195,7 +197,7 @@ type MyConfig struct {
 func main() {
 	c := MyConfig{}
 
-	config := conf.NewConfig(&c, conf.WithUsage(func(t *MyConfig, f string) string {
+	config := yacl.NewConfig(&c, yacl.WithUsage(func(t *MyConfig, f string) string {
         if f == "String" {
             return "Put a string here"
         }
@@ -211,14 +213,14 @@ func main() {
 package main
 
 import (
-	"github.com/rainu/go-conf"
+	"github.com/rainu/go-yacl"
 )
 
 type MyConfig struct {
 	String string `yaml:"string"`
 }
 
-// implements the interface >conf.UsageProvider<
+// implements the interface >yacl.UsageProvider<
 func (m *MyConfig) GetUsage(field string) string {
     if field == "String" {
         return "Put a string here"
@@ -229,7 +231,7 @@ func (m *MyConfig) GetUsage(field string) string {
 func main() {
 	c := MyConfig{}
 
-	config := conf.NewConfig(&c)
+	config := yacl.NewConfig(&c)
 	println(config.HelpFlags())
 }
 ```
@@ -240,7 +242,7 @@ func main() {
 package main
 
 import (
-	"github.com/rainu/go-conf"
+	"github.com/rainu/go-yacl"
 )
 
 type MyConfig struct {
@@ -252,7 +254,7 @@ type MyConfig struct {
 func main() {
 	c := MyConfig{}
 
-	config := conf.NewConfig(&c)
+	config := yacl.NewConfig(&c)
 	err := config.ParseArguments("--inner.bool=true")
 	if err != nil {
 		panic(err)
@@ -267,7 +269,7 @@ func main() {
 package main
 
 import (
-	"github.com/rainu/go-conf"
+	"github.com/rainu/go-yacl"
 )
 
 type MyConfig struct {
@@ -279,7 +281,7 @@ type MyConfig struct {
 func main() {
 	c := MyConfig{}
 
-	config := conf.NewConfig(&c)
+	config := yacl.NewConfig(&c)
 	err := config.ParseArguments("--inner.bool=true")
 	if err != nil {
 		panic(err)
