@@ -2,6 +2,7 @@ package yacl
 
 import (
 	"github.com/stretchr/testify/assert"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -14,19 +15,19 @@ func TestFieldInfos_HelpFlags(t *testing.T) {
 			{path: fieldPath{{key: "b-key", usage: "help for key2"}}, sType: "*int64"},
 			{path: fieldPath{{key: "n"}, {key: "key", usage: "help: ", isSlice: true}, {key: "value", usage: "value"}}, sType: "float64"},
 			{path: fieldPath{{key: "p"}, {key: "slice", usage: "help: ", isSlice: true}}, sType: "[]string"},
-			{path: fieldPath{{key: "m"}, {key: "key", usage: "help: ", isMap: true}, {key: "value", usage: "value"}}, sType: "float32"},
-			{path: fieldPath{{key: "p"}, {key: "map", usage: "help: ", isMap: true}}, sType: "map[]string"},
+			{path: fieldPath{{key: "m"}, {key: "key", usage: "help: ", isMap: true, mapKeyType: reflect.TypeOf("")}, {key: "value", usage: "value"}}, sType: "float32"},
+			{path: fieldPath{{key: "p"}, {key: "map", usage: "help: ", isMap: true, mapKeyType: reflect.TypeOf("")}}, sType: "map[]string", field: reflect.StructField{Type: reflect.TypeOf(map[string]string{})}},
 		},
 		options: newDefaultOptions(),
 	}
 
-	expected := "  -k,   --a-key           string       help for key1  \n"
-	expected += "        --z-key           int32        help for key3  \n"
-	expected += "        --b-key           int64        help for key2  \n"
-	expected += "        --n.key[i].value  float64      help: value    \n"
-	expected += "        --p.slice         []string     help:          \n"
-	expected += "        --m.key[k].value  float32      help: value    \n"
-	expected += "        --p.map[k]        map[]string  help:          \n"
+	expected := "  -k,   --a-key=string                 help for key1  \n"
+	expected += "        --z-key=int32                  help for key3  \n"
+	expected += "        --b-key=int64                  help for key2  \n"
+	expected += "        --n.key[int].value=float64     help: value    \n"
+	expected += "        --p.slice=[]string             help:          \n"
+	expected += "        --m.key[string].value=float32  help: value    \n"
+	expected += "        --p.map[string]=string         help:          \n"
 
 	assert.Equal(t, expected, infos.HelpFlags())
 }
@@ -38,21 +39,21 @@ func TestFieldInfos_HelpFlagsWithDefaults(t *testing.T) {
 			{path: fieldPath{{key: "z-key", usage: "help for key3"}}, sType: "int32", defaultValue: int32(13)},
 			{path: fieldPath{{key: "b-key", usage: "help for key2"}}, sType: "int64", defaultValue: int64(12)},
 			{path: fieldPath{{key: "n"}, {key: "key", usage: "help: ", isSlice: true}, {key: "value", usage: "value"}}, sType: "float64", defaultValue: float64(13.12)},
-			{path: fieldPath{{key: "m"}, {key: "key", usage: "help: ", isMap: true}, {key: "value", usage: "value"}}, sType: "float32", defaultValue: float32(12.13)},
+			{path: fieldPath{{key: "m"}, {key: "key", usage: "help: ", isMap: true, mapKeyType: reflect.TypeOf("")}, {key: "value", usage: "value"}}, sType: "float32", defaultValue: float32(12.13)},
 		},
 		options: newDefaultOptions(),
 	}
 
-	expected := "  -k,   --a-key           string   help for key1     \n"
-	expected += "                                   Default: default  \n"
-	expected += "        --z-key           int32    help for key3     \n"
-	expected += "                                   Default: 13       \n"
-	expected += "        --b-key           int64    help for key2     \n"
-	expected += "                                   Default: 12       \n"
-	expected += "        --n.key[i].value  float64  help: value       \n"
-	expected += "                                   Default: 13.12    \n"
-	expected += "        --m.key[k].value  float32  help: value       \n"
-	expected += "                                   Default: 12.13    \n"
+	expected := "  -k,   --a-key=string                 help for key1     \n"
+	expected += "                                       Default: default  \n"
+	expected += "        --z-key=int32                  help for key3     \n"
+	expected += "                                       Default: 13       \n"
+	expected += "        --b-key=int64                  help for key2     \n"
+	expected += "                                       Default: 12       \n"
+	expected += "        --n.key[int].value=float64     help: value       \n"
+	expected += "                                       Default: 13.12    \n"
+	expected += "        --m.key[string].value=float32  help: value       \n"
+	expected += "                                       Default: 12.13    \n"
 
 	assert.Equal(t, expected, infos.HelpFlags())
 }
@@ -64,7 +65,7 @@ func TestFieldInfos_HelpYaml(t *testing.T) {
 			{path: fieldPath{{key: "z", usage: "help for z"}}, sType: "string"},
 			{path: fieldPath{{key: "b", usage: "help for b"}}, sType: "string"},
 			{path: fieldPath{{key: "n"}, {key: "inner", usage: "help: ", isSlice: true}, {key: "value", usage: "value"}}, sType: "int64"},
-			{path: fieldPath{{key: "m"}, {key: "inner", usage: "help: ", isMap: true}, {key: "value", usage: "value"}}, sType: "int32"},
+			{path: fieldPath{{key: "m"}, {key: "inner", usage: "help: ", isMap: true, mapKeyType: reflect.TypeOf("")}, {key: "value", usage: "value"}}, sType: "int32"},
 		},
 		options: newDefaultOptions(),
 	}
@@ -78,7 +79,7 @@ func TestFieldInfos_HelpYaml(t *testing.T) {
       "value": int64 # help: value
 "m":
   "inner":
-    "k":
+    "string":
       "value": int32 # help: value
 `
 

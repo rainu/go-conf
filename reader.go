@@ -231,7 +231,7 @@ func (r *Reader) tryShort(line string, key, value *string, i int) bool {
 		}
 
 		// convert to long-variant and delegate to the long-variant
-		line = r.options.prefixLong + corField.path.key(r.options, fmt.Sprintf("%d", i), "k") + string(r.options.assignSign) + result[0][2]
+		line = r.options.prefixLong + corField.path.key(r.options, fmt.Sprintf("%d", i)) + string(r.options.assignSign) + result[0][2]
 		return r.tryLong(line, key, value)
 	}
 	return false
@@ -255,7 +255,7 @@ func (r *Reader) tryShortFlag(line string, key, value, next *string, i int) (mat
 
 		if corField.sType == "bool" || corField.sType == "*bool" {
 			// convert to long-variant and delegate to the long-variant
-			line = r.options.prefixLong + corField.path.key(r.options, fmt.Sprintf("%d", i), "k")
+			line = r.options.prefixLong + corField.path.key(r.options, fmt.Sprintf("%d", i))
 			return r.tryLongFlag(line, key, value), false
 		}
 
@@ -264,7 +264,7 @@ func (r *Reader) tryShortFlag(line string, key, value, next *string, i int) (mat
 			return false, false
 		}
 
-		line = r.options.prefixLong + corField.path.key(r.options, fmt.Sprintf("%d", i), "k") + string(r.options.assignSign) + *next
+		line = r.options.prefixLong + corField.path.key(r.options, fmt.Sprintf("%d", i)) + string(r.options.assignSign) + *next
 		return r.tryLong(line, key, value), true
 	}
 	return false, false

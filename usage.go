@@ -53,23 +53,34 @@ func (f *fieldInfos) HelpFlags() string {
 			short = f.options.prefixShort + short
 			short += ", "
 		}
-		long := f.options.prefixLong + info.path.key(f.options, "i", "k")
+		long := f.options.prefixLong + info.path.key(f.options, "int")
 		if strings.HasPrefix(info.sType, "[]") {
 			// we can dismiss the slice key in case there is a slice of primitives
-			long = strings.TrimSuffix(long, ".[i]")
+			long = strings.TrimSuffix(long, ".[int]")
 		}
 		long = strings.ReplaceAll(long, ".[", "[")
+		long += string(f.options.assignSign)
+
+		if strings.HasPrefix(info.sType, "map[") {
+			// only show the value-type of the map
+			valueType := info.Field().Type.Elem().Kind().String()
+			if valueType == "interface" {
+				valueType = "any"
+			}
+
+			long += valueType
+		} else {
+			long += strings.TrimPrefix(info.sType, "*") // remove pointer prefix
+		}
 
 		table.Append([]string{
 			short,
 			long,
-			strings.TrimPrefix(info.sType, "*"), // remove pointer prefix
 			info.path.Usage(),
 		})
 
 		if info.defaultValue != nil {
 			table.Append([]string{
-				"",
 				"",
 				"",
 				fmt.Sprintf("Default: %v", info.defaultValue),
@@ -86,9 +97,20 @@ func (f *fieldInfos) HelpYaml() string {
 
 	for _, fInfo := range f.fi {
 		arg := f.options.prefixLong
-		arg += fInfo.path.key(f.options, "0", "k")
+		arg += fInfo.path.key(f.options, "0")
 		arg += string(f.options.assignSign)
-		arg += strings.TrimPrefix(fInfo.sType, "*") // remove pointer prefix
+
+		if strings.HasPrefix(fInfo.sType, "map[") {
+			// only show the value-type of the map
+			valueType := fInfo.Field().Type.Elem().Kind().String()
+			if valueType == "interface" {
+				valueType = "any"
+			}
+
+			arg += valueType
+		} else {
+			arg += strings.TrimPrefix(fInfo.sType, "*") // remove pointer prefix
+		}
 
 		help := fInfo.path.Usage()
 		if help != "" {

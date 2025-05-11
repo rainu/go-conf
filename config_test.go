@@ -258,25 +258,25 @@ func TestConfig_HelpFlags(t *testing.T) {
 		}),
 	)
 
-	expected := "        --bool            bool                  Bool usage                               \n"
-	expected += "        --bool2           bool                                                           \n"
-	expected += "        --boolP           bool                                                           \n"
-	expected += "  -s,   --string          string                This is a string                         \n"
-	expected += "        --stringP         string                                                         \n"
-	expected += "  -a,   --string-array    []string                                                       \n"
-	expected += "        --raw-map[k]      map[string]interface                                           \n"
-	expected += "        --array[i].key    string                The key of the entry                     \n"
-	expected += "        --array[i].value  string                The value of the entry                   \n"
-	expected += "                                                Default: DEFAULT                         \n"
-	expected += "        --map[k].key      string                The key of the entry                     \n"
-	expected += "        --map[k].value    string                The value of the entry                   \n"
-	expected += "                                                Default: DEFAULT                         \n"
-	expected += "  -k,   --entry.key       string                The base entry: The key of the entry     \n"
-	expected += "        --entry.value     string                The base entry: The value of the entry   \n"
-	expected += "                                                Default: DEFAULT                         \n"
-	expected += "  -k,   --entryP.key      string                The base entryP: The key of the entry    \n"
-	expected += "        --entryP.value    string                The base entryP: The value of the entry  \n"
-	expected += "                                                Default: DEFAULT                         \n"
+	expected := "        --bool=bool                 Bool usage                               \n"
+	expected += "        --bool2=bool                                                         \n"
+	expected += "        --boolP=bool                                                         \n"
+	expected += "  -s,   --string=string             This is a string                         \n"
+	expected += "        --stringP=string                                                     \n"
+	expected += "  -a,   --string-array=[]string                                              \n"
+	expected += "        --raw-map[string]=any                                                \n"
+	expected += "        --array[int].key=string     The key of the entry                     \n"
+	expected += "        --array[int].value=string   The value of the entry                   \n"
+	expected += "                                    Default: DEFAULT                         \n"
+	expected += "        --map[string].key=string    The key of the entry                     \n"
+	expected += "        --map[string].value=string  The value of the entry                   \n"
+	expected += "                                    Default: DEFAULT                         \n"
+	expected += "  -k,   --entry.key=string          The base entry: The key of the entry     \n"
+	expected += "        --entry.value=string        The base entry: The value of the entry   \n"
+	expected += "                                    Default: DEFAULT                         \n"
+	expected += "  -k,   --entryP.key=string         The base entryP: The key of the entry    \n"
+	expected += "        --entryP.value=string       The base entryP: The value of the entry  \n"
+	expected += "                                    Default: DEFAULT                         \n"
 
 	assert.Equal(t, expected, toTest.HelpFlags())
 }
@@ -294,25 +294,25 @@ func TestConfig_HelpFlags_Sorted(t *testing.T) {
 		}),
 	)
 
-	expected := "        --array[i].key    string                The key of the entry                     \n"
-	expected += "        --array[i].value  string                The value of the entry                   \n"
-	expected += "                                                Default: DEFAULT                         \n"
-	expected += "        --bool            bool                  Bool usage                               \n"
-	expected += "        --bool2           bool                                                           \n"
-	expected += "        --boolP           bool                                                           \n"
-	expected += "  -k,   --entry.key       string                The base entry: The key of the entry     \n"
-	expected += "        --entry.value     string                The base entry: The value of the entry   \n"
-	expected += "                                                Default: DEFAULT                         \n"
-	expected += "  -k,   --entryP.key      string                The base entryP: The key of the entry    \n"
-	expected += "        --entryP.value    string                The base entryP: The value of the entry  \n"
-	expected += "                                                Default: DEFAULT                         \n"
-	expected += "        --map[k].key      string                The key of the entry                     \n"
-	expected += "        --map[k].value    string                The value of the entry                   \n"
-	expected += "                                                Default: DEFAULT                         \n"
-	expected += "        --raw-map[k]      map[string]interface                                           \n"
-	expected += "  -s,   --string          string                This is a string                         \n"
-	expected += "  -a,   --string-array    []string                                                       \n"
-	expected += "        --stringP         string                                                         \n"
+	expected := "        --array[int].key=string     The key of the entry                     \n"
+	expected += "        --array[int].value=string   The value of the entry                   \n"
+	expected += "                                    Default: DEFAULT                         \n"
+	expected += "        --bool=bool                 Bool usage                               \n"
+	expected += "        --bool2=bool                                                         \n"
+	expected += "        --boolP=bool                                                         \n"
+	expected += "  -k,   --entry.key=string          The base entry: The key of the entry     \n"
+	expected += "        --entry.value=string        The base entry: The value of the entry   \n"
+	expected += "                                    Default: DEFAULT                         \n"
+	expected += "  -k,   --entryP.key=string         The base entryP: The key of the entry    \n"
+	expected += "        --entryP.value=string       The base entryP: The value of the entry  \n"
+	expected += "                                    Default: DEFAULT                         \n"
+	expected += "        --map[string].key=string    The key of the entry                     \n"
+	expected += "        --map[string].value=string  The value of the entry                   \n"
+	expected += "                                    Default: DEFAULT                         \n"
+	expected += "        --raw-map[string]=any                                                \n"
+	expected += "  -s,   --string=string             This is a string                         \n"
+	expected += "  -a,   --string-array=[]string                                              \n"
+	expected += "        --stringP=string                                                     \n"
 
 	assert.Equal(t, expected, toTest.HelpFlags(WithSorter(PathSorter)))
 }
@@ -330,7 +330,7 @@ func TestConfig_HelpFlags_Filtered(t *testing.T) {
 		}),
 	)
 
-	expected := "    --bool  bool  Bool usage  \n"
+	expected := "    --bool=bool  Bool usage  \n"
 
 	testFilter := func(a FieldInfo) bool {
 		return a.Path() != "bool"
@@ -353,13 +353,13 @@ func TestConfig_HelpYaml(t *testing.T) {
 "string-array":
   - []string
 "raw-map":
-  "k": map[string]interface
+  "string": any
 "array":
   -
     "key": string # The key of the entry
     "value": string # The value of the entry
 "map":
-  "k":
+  "string":
     "key": string # The key of the entry
     "value": string # The value of the entry
 "entry":
@@ -393,11 +393,11 @@ func TestConfig_HelpYaml_Sorted(t *testing.T) {
   "key": string # The base entryP: The key of the entry
   "value": string # The base entryP: The value of the entry
 "map":
-  "k":
+  "string":
     "key": string # The key of the entry
     "value": string # The value of the entry
 "raw-map":
-  "k": map[string]interface
+  "string": any
 "string": string # This is a string
 "string-array":
   - []string
@@ -452,9 +452,9 @@ func TestConfig_ShadowStructs(t *testing.T) {
 		},
 	}, *c)
 
-	eArgs := "    --string  string                    \n"
-	eArgs += "    --array   []string           array  \n"
-	eArgs += "    --map[k]  map[string]string  map    \n"
+	eArgs := "    --string=string              \n"
+	eArgs += "    --array=[]string      array  \n"
+	eArgs += "    --map[string]=string  map    \n"
 
 	assert.Equal(t, eArgs, config.HelpFlags())
 
@@ -463,7 +463,7 @@ func TestConfig_ShadowStructs(t *testing.T) {
 "array":
   - []string # array
 "map":
-  "k": map[string]string # map
+  "string": string # map
 `
 	assert.Equal(t, strings.TrimSpace(eYaml), strings.TrimSpace(config.HelpYaml()))
 }

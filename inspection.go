@@ -30,10 +30,11 @@ type fieldInfo struct {
 type fieldPath []*fieldPathNode
 
 type fieldPathNode struct {
-	key     string
-	isMap   bool
-	isSlice bool
-	usage   string
+	key        string
+	isMap      bool
+	mapKeyType reflect.Type
+	isSlice    bool
+	usage      string
 }
 
 type fieldInfos struct {
@@ -152,6 +153,7 @@ func (c *Config) scan(t reflect.Type, parent fieldPath, infos *[]fieldInfo) {
 			}
 		case reflect.Map:
 			node.isMap = true
+			node.mapKeyType = field.Type.Key()
 			if field.Type.Elem().Kind() == reflect.Struct ||
 				(field.Type.Elem().Kind() == reflect.Ptr && field.Type.Elem().Elem().Kind() == reflect.Struct) {
 				elemType := field.Type.Elem()
@@ -185,7 +187,7 @@ func (c *Config) scan(t reflect.Type, parent fieldPath, infos *[]fieldInfo) {
 	}
 }
 
-func (f fieldPath) key(opts Options, sliceKey, mapKey string) string {
+func (f fieldPath) key(opts Options, sliceKey string) string {
 	var sb strings.Builder
 
 	for i, pc := range f {
@@ -201,7 +203,7 @@ func (f fieldPath) key(opts Options, sliceKey, mapKey string) string {
 		} else if pc.isMap {
 			sb.WriteRune(opts.keyDelimiter)
 			sb.WriteRune('[')
-			sb.WriteString(mapKey)
+			sb.WriteString(pc.mapKeyType.String())
 			sb.WriteRune(']')
 		}
 	}
@@ -250,7 +252,7 @@ func (f *fieldInfos) findByPath(path []string) *fieldInfo {
 }
 
 func (f *fieldInfo) Path() string {
-	return f.path.key(newDefaultOptions(), "", "")
+	return f.path.key(newDefaultOptions(), "")
 }
 
 func (f *fieldInfo) Field() reflect.StructField {

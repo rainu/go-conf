@@ -222,6 +222,13 @@ func testConfig_collectInfos[T any](t *testing.T, dst *T, expected []fieldInfo, 
 		for i := range r.fi {
 			r.fi[i].field = reflect.StructField{}
 		}
+
+		// ignore map type
+		for i := range r.fi {
+			if r.fi[i].path != nil && len(r.fi[i].path) > 0 {
+				r.fi[i].path[0].mapKeyType = nil
+			}
+		}
 		assert.Equal(t, expected, r.fi)
 	})
 }
