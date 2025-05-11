@@ -87,11 +87,16 @@ func (f *fieldInfos) HelpFlags() string {
 		sb.WriteString(intend)
 		sb.WriteString(short)
 		sb.WriteString(long)
-		sb.WriteString("\n")
-		sb.WriteString(intend)
-		sb.WriteString(shortIntend)
-		sb.WriteString("\t")
-		sb.WriteString(strings.ReplaceAll(info.path.Usage(), "\n", "\n"+intend+shortIntend+"\t"))
+
+		usage := strings.ReplaceAll(info.path.Usage(), "\n", "\n"+intend+shortIntend+"\t")
+		if usage != "" {
+			sb.WriteString("\n")
+			sb.WriteString(intend)
+			sb.WriteString(shortIntend)
+			sb.WriteString("\t")
+			sb.WriteString(usage)
+		}
+
 		if info.defaultValue != nil {
 			sb.WriteString("\n")
 			sb.WriteString(intend)

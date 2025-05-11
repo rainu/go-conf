@@ -261,17 +261,12 @@ func TestConfig_HelpFlags(t *testing.T) {
 		`      --bool=bool
       	Bool usage
       --bool2=bool
-      	
       --boolP=bool
-      	
   -s, --string=string
       	This is a string
       --stringP=string
-      	
   -a, --string-array=[]string
-      	
       --raw-map[string]=any
-      	
       --array[int].key=string
       	The key of the entry
       --array[int].value=string
@@ -319,9 +314,7 @@ func TestConfig_HelpFlags_Sorted(t *testing.T) {
       --bool=bool
       	Bool usage
       --bool2=bool
-      	
       --boolP=bool
-      	
   -k, --entry.key=string
       	The base entry: The key of the entry
       --entry.value=string
@@ -338,13 +331,10 @@ func TestConfig_HelpFlags_Sorted(t *testing.T) {
       	The value of the entry
       	Default: DEFAULT
       --raw-map[string]=any
-      	
   -s, --string=string
       	This is a string
   -a, --string-array=[]string
-      	
       --stringP=string
-      	
 `
 
 	assert.Equal(t, expected, toTest.HelpFlags(WithSorter(PathSorter)))
@@ -490,7 +480,6 @@ func TestConfig_ShadowStructs(t *testing.T) {
 
 	eArgs :=
 		`  --string=string
-  	
   --array=[]string
   	array
   --map[string]=string
