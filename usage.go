@@ -2,7 +2,6 @@ package yacl
 
 import (
 	"fmt"
-	"github.com/olekukonko/tablewriter"
 	"io"
 	"reflect"
 	"strings"
@@ -41,18 +40,30 @@ func (f fieldPath) Usage() string {
 func (f *fieldInfos) HelpFlags() string {
 	var sb strings.Builder
 
-	table := tablewriter.NewWriter(&sb)
-	table.SetBorder(false)
-	table.SetHeaderLine(false)
-	table.SetColumnSeparator("")
-	table.SetAutoWrapText(false)
+	maxShortLen := 0
+	intend := "  "
+	shortIntend := ""
+	shortLongDelimiter := ", "
+
+	for _, info := range f.fi {
+		if maxShortLen < len(info.short) {
+			maxShortLen = len(info.short)
+		}
+	}
+	if maxShortLen > 0 {
+		maxShortLen += len(f.options.prefixShort) + len(intend)
+		shortIntend = strings.Repeat(" ", maxShortLen)
+	}
 
 	for _, info := range f.fi {
 		short := info.short
 		if short != "" {
 			short = f.options.prefixShort + short
-			short += ", "
+			short += shortLongDelimiter
+		} else {
+			short = shortIntend
 		}
+
 		long := f.options.prefixLong + info.path.key(f.options, "int")
 		if strings.HasPrefix(info.sType, "[]") {
 			// we can dismiss the slice key in case there is a slice of primitives
@@ -73,22 +84,24 @@ func (f *fieldInfos) HelpFlags() string {
 			long += strings.TrimPrefix(info.sType, "*") // remove pointer prefix
 		}
 
-		table.Append([]string{
-			short,
-			long,
-			info.path.Usage(),
-		})
-
+		sb.WriteString(intend)
+		sb.WriteString(short)
+		sb.WriteString(long)
+		sb.WriteString("\n")
+		sb.WriteString(intend)
+		sb.WriteString(shortIntend)
+		sb.WriteString("\t")
+		sb.WriteString(strings.ReplaceAll(info.path.Usage(), "\n", "\n"+intend+shortIntend+"\t"))
 		if info.defaultValue != nil {
-			table.Append([]string{
-				"",
-				"",
-				fmt.Sprintf("Default: %v", info.defaultValue),
-			})
+			sb.WriteString("\n")
+			sb.WriteString(intend)
+			sb.WriteString(shortIntend)
+			sb.WriteString("\t")
+			sb.WriteString(fmt.Sprintf("Default: %v", info.defaultValue))
 		}
+		sb.WriteString("\n")
 	}
 
-	table.Render()
 	return sb.String()
 }
 
