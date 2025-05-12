@@ -10,6 +10,7 @@ type testConfig struct {
 	Bool        bool                 `yaml:"bool"`
 	Bool2       bool                 `yaml:"bool2"`
 	BoolP       *bool                `yaml:"boolP"`
+	Float       float32              `yaml:"float"`
 	String      string               `yaml:"string" short:"s" usage:"This is a string"`
 	StringP     *string              `yaml:"stringP"`
 	StringArray []string             `yaml:"string-array" short:"a"`
@@ -45,6 +46,7 @@ func TestConfig_Parse_DefaultConfig(t *testing.T) {
 		"--bool2=true",
 		"--boolP=false",
 		"--string=hello",
+		"--float=3.14",
 		"--array.[1].key=name1",
 		"--array.[1].value=value1",
 		"--array.[0].key=name0",
@@ -57,12 +59,12 @@ func TestConfig_Parse_DefaultConfig(t *testing.T) {
 		"--map.[test 2].value=value2",
 		"--map[test 3].key=name3",
 		"--map[test 3].value=value3",
-		"--raw-map.string=\"*&.<>/{}|\"",
+		"--raw-map.string=*&.<>/{}|",
 		"--raw-map.number=2",
 		"--raw-map.[key with space]=value",
 		"--string-array.[0]=value1",
 		"--string-array.[1]=value2",
-		"--string-array.[2]=\"*&.<>/{}|\"",
+		"--string-array.[2]=*&.<>/{}|",
 		"--entry.key=entryKey",
 		"--entryP.key=entryKey",
 	}
@@ -72,6 +74,7 @@ func TestConfig_Parse_DefaultConfig(t *testing.T) {
 		Bool:   true,
 		Bool2:  true,
 		BoolP:  P(false),
+		Float:  3.14,
 		String: "hello",
 		StringArray: []string{
 			"value1",
@@ -108,7 +111,7 @@ func TestConfig_Parse_PrimitiveArray(t *testing.T) {
 	args := []string{
 		"--string-array=value1",
 		"--string-array=value2",
-		"--string-array=\"*&.<>/{}|\"",
+		"--string-array=*&.<>/{}|",
 	}
 
 	assert.NoError(t, NewConfig(&conf).ParseArguments(args...))
@@ -127,7 +130,7 @@ func TestConfig_Parse_ShortPrimitiveArray(t *testing.T) {
 	args := []string{
 		"-a=value1",
 		"-a=value2",
-		"-a=\"*&.<>/{}|\"",
+		"-a=*&.<>/{}|",
 	}
 
 	assert.NoError(t, NewConfig(&conf).ParseArguments(args...))
@@ -262,6 +265,7 @@ func TestConfig_HelpFlags(t *testing.T) {
       	Bool usage
       --bool2=bool
       --boolP=bool
+      --float=float32
   -s, --string=string
       	This is a string
       --stringP=string
@@ -325,6 +329,7 @@ func TestConfig_HelpFlags_Sorted(t *testing.T) {
       --entryP.value=string
       	The base entryP: The value of the entry
       	Default: DEFAULT
+      --float=float32
       --map[string].key=string
       	The key of the entry
       --map[string].value=string
@@ -374,6 +379,7 @@ func TestConfig_HelpYaml(t *testing.T) {
 "bool": bool
 "bool2": bool
 "boolP": bool
+"float": float32
 "string": string # This is a string
 "stringP": string
 "string-array":
@@ -418,6 +424,7 @@ func TestConfig_HelpYaml_Sorted(t *testing.T) {
 "entryP":
   "key": string # The base entryP: The key of the entry
   "value": string # The base entryP: The value of the entry
+"float": float32
 "map":
   "string":
     "key": string # The key of the entry

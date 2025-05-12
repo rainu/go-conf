@@ -11,7 +11,7 @@ import (
 func TestReader(t *testing.T) {
 	args := []string{
 		"--int=42",
-		"--string=hello",
+		"--string=hello: from another world",
 		"--string-array.[0]=value1",
 		"--string-array.[1]=value2",
 		"--int-array.[0]=1",
@@ -57,7 +57,7 @@ func TestReader(t *testing.T) {
         "value": value1
 "bool": true
 "bool-flag": true
-"float": 3.14
+"float": '3.14'
 "inner-map":
   "space key":
     "name": name2
@@ -80,10 +80,25 @@ func TestReader(t *testing.T) {
   "key with space": value
   "number": 2
   "string": value
-"string": hello
+"string": 'hello: from another world'
 "string-array":
   - value1
   - value2
+`
+
+	result, err := io.ReadAll(newReader(args, nil, newDefaultOptions()))
+	assert.NoError(t, err)
+	assert.Equal(t, strings.TrimSpace(expected), strings.TrimSpace(string(result)))
+}
+
+func TestReader_Quoting(t *testing.T) {
+	args := []string{
+		"--string1=hello: from another world",
+		"--string2=hello:\nfrom another world",
+	}
+	expected := `
+"string1": 'hello: from another world'
+"string2": 'hello:\nfrom another world'
 `
 
 	result, err := io.ReadAll(newReader(args, nil, newDefaultOptions()))

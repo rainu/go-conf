@@ -17,7 +17,8 @@ type Reader struct {
 
 	running bool
 
-	preventSort bool
+	preventSort  bool
+	preventQuote bool
 
 	reKeyVal          *regexp.Regexp
 	reKeyValFlag      *regexp.Regexp
@@ -33,6 +34,7 @@ type Reader struct {
 func newReaderWithoutSort(args []string, dst *fieldInfos, options Options) *Reader {
 	r := newReader(args, dst, options)
 	r.preventSort = true
+	r.preventQuote = true
 
 	return r
 }
@@ -88,13 +90,13 @@ func (r *Reader) run() {
 					if onlyNumberRegex.MatchString(segment) {
 						// this is a primitive array value
 						r.w.Write([]byte("- "))
-						r.w.Write([]byte(l.value))
+						r.w.Write([]byte(r.quote(l.value)))
 						r.w.Write([]byte("\n"))
 					} else {
 						r.w.Write([]byte("\""))
 						r.w.Write([]byte(segment))
 						r.w.Write([]byte("\": "))
-						r.w.Write([]byte(l.value))
+						r.w.Write([]byte(r.quote(l.value)))
 						r.w.Write([]byte("\n"))
 					}
 				} else {
@@ -118,6 +120,20 @@ func (r *Reader) run() {
 	}
 }
 
+var reSpecialChars = regexp.MustCompile(`[^a-zA-Z0-9]`)
+
+func (r *Reader) quote(rawValue string) string {
+	if r.preventQuote {
+		return rawValue
+	}
+
+	if reSpecialChars.MatchString(rawValue) {
+		rawValue = strings.ReplaceAll(rawValue, "'", `\'`)
+		return fmt.Sprintf("'%s'", rawValue)
+	}
+	return rawValue
+}
+
 type line struct {
 	path  []string
 	value string
@@ -127,7 +143,7 @@ func (r *Reader) collectLines() []line {
 	lines := make([]line, 0, len(r.args))
 
 	for i := 0; i < len(r.args); i += 1 {
-		key := r.args[i]
+		key := strings.ReplaceAll(r.args[i], "\n", "\\n")
 		var value string
 		var nextArg string
 		if i+1 < len(r.args) {
