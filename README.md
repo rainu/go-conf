@@ -9,7 +9,15 @@
 
 This library parses command line flags, environment variables, and configuration files (yaml) into a struct.
 
-The "key-mechanic" is to convert command line arguments to yaml-content and then use [yaml parser](github.com/goccy/go-yaml) to parse the content into a struct.
+With the go's default [flag package](https://pkg.go.dev/flag) there is only the possibility to define "flat" flags: there is no possibility to define dynamic structures.
+
+This library tackle that issue. They can parse arguments like this:
+
+```
+$> myApp --map[key]=value --entry[0].key=key1 --entry[0].value=val1
+```
+
+The "key-mechanic" is converting command line arguments to yaml-content and then use [yaml parser](github.com/goccy/go-yaml) to parse the content into a struct.
 Therefore, you have to use the yaml-tags for defining the key names.
 
 # How to use it
@@ -24,7 +32,12 @@ import (
 )
 
 type MyConfig struct {
-	Help bool `yaml:"help" short:"h" usage:"Show help"`
+	Help bool               `yaml:"help" short:"h" usage:"Show help"`
+	Map  map[string]string  `yaml:"map"`
+	Entries []struct{
+		Key   string `yaml:"key"`
+		Value string `yaml:"value"`
+	} `yaml:"entry"`
 }
 
 func main() {
@@ -303,4 +316,4 @@ func main() {
 
 ## More options
 
-For more options, have a look into the [options.go](./options.go) file.
+For more options, have a look into the [option.go](./option.go) file.
